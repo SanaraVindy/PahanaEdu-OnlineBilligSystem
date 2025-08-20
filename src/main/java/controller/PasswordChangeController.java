@@ -2,6 +2,8 @@ package controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import dao.UserDAO;
+import dao.UserLoginDAO;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,8 +17,25 @@ import service.UserLoginService;
 @WebServlet("/api/change-password")
 public class PasswordChangeController extends HttpServlet {
 
-    private final UserLoginService userLoginService = new UserLoginService();
     private final Gson gson = new Gson();
+    private UserLoginService userLoginService;
+
+    /**
+     * This is the no-argument constructor required by the Servlet container.
+     * It initializes the UserLoginService with concrete DAO implementations.
+     */
+    public PasswordChangeController() {
+        this.userLoginService = new UserLoginService(new UserLoginDAO(), new UserDAO());
+    }
+
+    /**
+     * This constructor is used for unit testing. It allows us to inject
+     * mock or fake service instances.
+     * @param userLoginService The service to be injected.
+     */
+    public PasswordChangeController(UserLoginService userLoginService) {
+        this.userLoginService = userLoginService;
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

@@ -9,20 +9,38 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import service.UserLoginService;
-
+import dao.UserDAO;
+import dao.UserLoginDAO;
 
 
 @WebServlet("/api/login")
 public class UserLoginController extends HttpServlet {
 
-    private final UserLoginService userLoginService = new UserLoginService();
     private final Gson gson = new Gson();
+    private UserLoginService userLoginService;
+
+    /**
+     * This is the no-argument constructor required by the Servlet container.
+     * It initializes the UserLoginService with concrete DAO implementations.
+     */
+    public UserLoginController() {
+        this.userLoginService = new UserLoginService(new UserLoginDAO(), new UserDAO());
+    }
+    
+    /**
+     * This constructor is used for unit testing. It allows us to inject
+     * mock or fake service instances.
+     * @param userLoginService The service to be injected.
+     */
+    public UserLoginController(UserLoginService userLoginService) {
+        this.userLoginService = userLoginService;
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
+        
         JsonObject responseJson = new JsonObject();
         
         try {
