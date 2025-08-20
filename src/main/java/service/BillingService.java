@@ -1,111 +1,118 @@
 package service;
 
+import dao.InvoiceDAO;
+import dao.ItemDAO;
+import dao.OrderDAO;
+import dao.OrderItemDAO;
+import model.Invoice;
+import model.Item;
+import model.Order;
+import model.OrderItem;
 import config.DBConnection;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import model.Order;
-import model.OrderItem;
-import model.Invoice; // <-- Add this import
-import java.util.Date; // <-- Add this import
 import java.util.List;
 
+/**
+ * Service class for handling billing and transaction processes.
+ * It coordinates with various DAOs to ensure the atomicity of billing operations.
+ */
 public class BillingService {
+    private final OrderDAO orderDAO;
+    private final OrderItemDAO orderItemDAO;
+    private final InvoiceDAO invoiceDAO;
+    private final ItemDAO itemDAO;
 
-    private final OrderService orderService = new OrderService();
-    private final OrderItemService orderItemService = new OrderItemService();
-    private final CustomerService customerService = new CustomerService();
-    private final ItemService itemService = new ItemService();
-    private final InvoiceService invoiceService = new InvoiceService();
+    public BillingService(OrderDAO orderDAO, OrderItemDAO orderItemDAO, InvoiceDAO invoiceDAO, ItemDAO itemDAO) {
+        this.orderDAO = orderDAO;
+        this.orderItemDAO = orderItemDAO;
+        this.invoiceDAO = invoiceDAO;
+        this.itemDAO = itemDAO;
+    }
 
     /**
-     * Processes a new transaction by creating an order, adding its items,
-     * updating item quantities, updating customer loyalty points, and creating
-     * an invoice within a single database transaction.
-     * @param order The Order object to be created.
-     * @param orderItems A list of OrderItem objects for the order.
-     * @return true if the transaction is successful, false otherwise.
+     * Processes a complete billing transaction, including creating an order, adding order items,
+     * applying discounts, and creating an invoice. The entire operation is wrapped in a single database transaction.
+     *
+     * @param order The Order object containing customer and total details.
+     * @param orderItems A list of OrderItem objects representing the items in the order.
+     * @param grandTotal The total amount of the order before any discounts.
+     * @param paymentType The method of payment.
+     * @return A status message indicating the result of the transaction (e.g., "Transaction successful" or an error message).
      */
-    public boolean processTransaction(Order order, List<OrderItem> orderItems, BigDecimal discount, String paymentMethod) {
-        Connection conn = null;
-        boolean success = false;
-        try {
-            conn = DBConnection.getConnection();
-            conn.setAutoCommit(false); // Start transaction
+    public String processTransaction(Order order, List<OrderItem> orderItems, BigDecimal grandTotal, String paymentType) {
+        if (orderItems == null || orderItems.isEmpty()) {
+            return "Error: Order items list is null or empty.";
+        }
+        
+        // This is a crucial change: we get the connection here and pass it to the DAOs.
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false); // Begin transaction
 
-            // 1. Create the order and get the generated ID
-            int orderID = orderService.createOrder(order, conn);
+            try {
+                // 1. Apply discounts
+                BigDecimal totalDiscount = BigDecimal.ZERO;
 
-            if (orderID != -1) {
-                // 2. Set the generated orderID to all order items and add them
+                // Rule 1: 10% discount if grand total is over 5000
+                if (grandTotal.compareTo(new BigDecimal("5000.00")) > 0) {
+                    totalDiscount = totalDiscount.add(grandTotal.multiply(new BigDecimal("0.10")));
+                }
+
+                // Rule 2: 5% discount if any item is from category ID 7 (Children's wear)
+                boolean hasChildrensWear = false;
                 for (OrderItem item : orderItems) {
-                    item.setOrderID(orderID);
-                }
-
-                boolean itemsAdded = orderItemService.addOrderItems(orderItems, conn);
-
-                if (itemsAdded) {
-                    // 3. Update the quantities of the purchased items
-                    boolean itemsUpdated = itemService.updateItemQuantities(conn, orderItems);
-
-                    if (itemsUpdated) {
-                        // 4. Calculate and update loyalty points
-                        int pointsToAdd = order.getTotalAmount().intValue() / 10;
-                        boolean pointsUpdated = customerService.updateLoyaltyPoints(order.getCustomerID(), pointsToAdd, conn);
-
-                        if (pointsUpdated) {
-                            // 5. Create the invoice
-                            Invoice invoice = new Invoice();
-                            invoice.setOrderID(orderID);
-                            invoice.setInvoiceDate(new Date());
-                            invoice.setTotalAmount(order.getTotalAmount());
-                            invoice.setDiscount(discount);
-                            invoice.setPaymentType(paymentMethod);
-                            
-                            System.out.println(orderID);
-                            System.out.println(paymentMethod);
-                            //System.out.println(order.TotalAmount);
-                            System.out.println(discount);
-                            
-                            boolean invoiceCreated = invoiceService.createInvoice(conn, invoice);
-
-                            if (invoiceCreated) {
-                                conn.commit(); // Commit transaction
-                                success = true;
-                            } else {
-                                conn.rollback(); // Rollback if invoice creation fails
-                            }
-                        } else {
-                            conn.rollback(); // Rollback if loyalty points fail
-                        }
-                    } else {
-                        conn.rollback(); // Rollback if updating item quantities fails
+                    Item fetchedItem = itemDAO.getItem(item.getItemID(), con);
+                    if (fetchedItem != null && fetchedItem.getCategoryID() == 7) {
+                        hasChildrensWear = true;
+                        break;
                     }
-                } else {
-                    conn.rollback(); // Rollback if adding items fails
                 }
-            } else {
-                conn.rollback(); // Rollback if creating order fails
+                if (hasChildrensWear) {
+                    totalDiscount = totalDiscount.add(grandTotal.multiply(new BigDecimal("0.05")));
+                }
+
+                BigDecimal finalTotal = grandTotal.subtract(totalDiscount);
+                
+                // 2. Create the order
+                int newOrderID = orderDAO.createOrder(order, con);
+                if (newOrderID == -1) {
+                    con.rollback();
+                    return "Error: Failed to add order.";
+                }
+
+                // 3. Add order items
+                for (OrderItem item : orderItems) {
+                    item.setOrderID(newOrderID);
+                }
+                boolean itemsAdded = orderItemDAO.addOrderItems(orderItems, con);
+                if (!itemsAdded) {
+                    con.rollback();
+                    return "Error: Failed to add order items.";
+                }
+
+                // 4. Create the invoice
+                Invoice invoice = new Invoice();
+                invoice.setOrderID(newOrderID);
+                invoice.setTotalAmount(finalTotal);
+                invoice.setDiscount(totalDiscount);
+                invoice.setPaymentType(paymentType);
+
+                boolean invoiceCreated = invoiceDAO.createInvoice(con, invoice);
+                if (!invoiceCreated) {
+                    con.rollback();
+                    return "Error: Failed to add invoice.";
+                }
+
+                con.commit(); // Commit transaction
+                return "Transaction successful";
+            } catch (SQLException e) {
+                con.rollback();
+                return "Error: Transaction failed due to a database error. " + e.getMessage();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Rollback on any SQL exception
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // Reset auto-commit
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            return "Error: Failed to establish a database connection. " + e.getMessage();
         }
-        return success;
     }
 }
