@@ -2,6 +2,7 @@ package dao;
 
 import config.DBConnection;
 import model.Item;
+import model.OrderItem;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -74,6 +75,34 @@ public class ItemDAO {
         } catch (SQLException e) {
             System.err.println("SQL error occurred while fetching item by ID.");
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves an item by its ID using an existing database connection.
+     * This method is intended for use within a transaction.
+     * @param itemID The ID of the item to retrieve.
+     * @param conn The database connection for the transaction.
+     * @return The Item object, or null if not found.
+     * @throws SQLException if a database access error occurs.
+     */
+    public Item getItem(int itemID, Connection conn) throws SQLException {
+        String sql = "SELECT itemID, description, identificationCode, unitPrice, quantity, categoryID FROM pahanaedu.item WHERE itemID = ?;";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, itemID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Item item = new Item();
+                    item.setItemID(rs.getInt("itemID"));
+                    item.setDescription(rs.getString("description"));
+                    item.setIdentificationCode(rs.getString("identificationCode"));
+                    item.setUnitPrice(rs.getBigDecimal("unitPrice"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setCategoryID(rs.getInt("categoryID"));
+                    return item;
+                }
+            }
         }
         return null;
     }
@@ -217,20 +246,46 @@ public class ItemDAO {
         }
     }
 
-    public int getItemQuantity(int itemID) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    /**
+     * Updates the quantity of a list of items by iterating and calling the
+     * update method for each item. This method is used within a transaction.
+     * @param orderItems The list of OrderItem objects containing the itemID and quantity to update.
+     * @param conn The database connection for the transaction.
+     * @return true if all updates are successful, false otherwise.
+     * @throws SQLException if a database access error occurs.
+     */
+    public boolean updateItemQuantities(List<OrderItem> orderItems, Connection conn) throws SQLException {
+        for (OrderItem item : orderItems) {
+            if (!updateItemQuantity(item.getItemID(), item.getQuantity(), conn)) {
+                return false; // Return false if any single update fails.
+            }
+        }
+        return true;
     }
 
-    public boolean updateItemQuantity(int itemID, int i) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-    public boolean updateItemQuantity(Connection conn, int itemID, int quantityToSubtract) throws SQLException {
+    /**
+     * Updates the quantity of a single item in the database by subtracting the specified quantity.
+     * This method ensures the quantity does not go negative and uses a shared connection.
+     * @param itemID The ID of the item to update.
+     * @param quantityToSubtract The quantity to subtract from the item's stock.
+     * @param conn The database connection to use for the transaction.
+     * @return true if the update was successful, false otherwise.
+     * @throws SQLException if a database access error occurs.
+     */
+    private boolean updateItemQuantity(int itemID, int quantityToSubtract, Connection conn) throws SQLException {
         String sql = "UPDATE pahanaedu.item SET quantity = quantity - ? WHERE itemID = ? AND quantity >= ?;";
+        
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
             stmt.setInt(1, quantityToSubtract);
             stmt.setInt(2, itemID);
             stmt.setInt(3, quantityToSubtract); // Prevents quantity from going negative
-            return stmt.executeUpdate() > 0;
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("SQL error occurred while updating the item quantity.");
+            throw e; // Re-throw to allow the calling service to handle the transaction
         }
     }
 }
