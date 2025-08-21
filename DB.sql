@@ -349,6 +349,303 @@ END$$
 DELIMITER ;
 
 
+-- Table to log changes on the `item` table.
+CREATE TABLE ItemAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    ItemID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL, -- 'INSERT', 'UPDATE', 'DELETE'
+    OldData JSON,               -- Stores the old row data for UPDATE and DELETE
+    NewData JSON,               -- Stores the new row data for INSERT and UPDATE
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table to log changes on the `customer` table.
+CREATE TABLE CustomerAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL,
+    OldData JSON,
+    NewData JSON,
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table to log changes on the `category` table.
+CREATE TABLE CategoryAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    CategoryID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL,
+    OldData JSON,
+    NewData JSON,
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table to log changes on the `invoice` table.
+CREATE TABLE InvoiceAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    InvoiceID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL,
+    OldData JSON,
+    NewData JSON,
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table to log changes on the `order` table.
+CREATE TABLE OrderAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    OrderID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL,
+    OldData JSON,
+    NewData JSON,
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table to log changes on the `order_item` table.
+CREATE TABLE OrderItemAudit (
+    AuditID INT AUTO_INCREMENT PRIMARY KEY,
+    OrderItemID INT NOT NULL,
+    Action VARCHAR(10) NOT NULL,
+    OldData JSON,
+    NewData JSON,
+    ChangedBy VARCHAR(255) NOT NULL,
+    ChangeTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--
+-- Triggers
+--
+
+-- Trigger for 'item' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_item_after_insert
+AFTER INSERT ON item
+FOR EACH ROW
+BEGIN
+    INSERT INTO ItemAudit (ItemID, Action, NewData, ChangedBy)
+    VALUES (NEW.itemID, 'INSERT', JSON_OBJECT('description', NEW.description, 'identificationCode', NEW.identificationCode, 'unitPrice', NEW.unitPrice, 'quantity', NEW.quantity, 'categoryID', NEW.categoryID), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'item' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_item_after_update
+AFTER UPDATE ON item
+FOR EACH ROW
+BEGIN
+    INSERT INTO ItemAudit (ItemID, Action, OldData, NewData, ChangedBy)
+    VALUES (
+        OLD.itemID,
+        'UPDATE',
+        JSON_OBJECT('description', OLD.description, 'identificationCode', OLD.identificationCode, 'unitPrice', OLD.unitPrice, 'quantity', OLD.quantity, 'categoryID', OLD.categoryID),
+        JSON_OBJECT('description', NEW.description, 'identificationCode', NEW.identificationCode, 'unitPrice', NEW.unitPrice, 'quantity', NEW.quantity, 'categoryID', NEW.categoryID),
+        USER()
+    );
+END$$
+DELIMITER ;
+
+-- Trigger for 'item' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_item_after_delete
+AFTER DELETE ON item
+FOR EACH ROW
+BEGIN
+    INSERT INTO ItemAudit (ItemID, Action, OldData, ChangedBy)
+    VALUES (OLD.itemID, 'DELETE', JSON_OBJECT('description', OLD.description, 'identificationCode', OLD.identificationCode, 'unitPrice', OLD.unitPrice, 'quantity', OLD.quantity, 'categoryID', OLD.categoryID), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'customer' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_customer_after_insert
+AFTER INSERT ON customer
+FOR EACH ROW
+BEGIN
+    INSERT INTO CustomerAudit (CustomerID, Action, NewData, ChangedBy)
+    VALUES (NEW.customerID, 'INSERT', JSON_OBJECT('firstName', NEW.firstName, 'lastName', NEW.lastName, 'email', NEW.email, 'contactNo', NEW.contactNo, 'loyaltyPoints', NEW.loyaltyPoints), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'customer' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_customer_after_update
+AFTER UPDATE ON customer
+FOR EACH ROW
+BEGIN
+    INSERT INTO CustomerAudit (CustomerID, Action, OldData, NewData, ChangedBy)
+    VALUES (
+        OLD.customerID,
+        'UPDATE',
+        JSON_OBJECT('firstName', OLD.firstName, 'lastName', OLD.lastName, 'email', OLD.email, 'contactNo', OLD.contactNo, 'loyaltyPoints', OLD.loyaltyPoints),
+        JSON_OBJECT('firstName', NEW.firstName, 'lastName', NEW.lastName, 'email', NEW.email, 'contactNo', NEW.contactNo, 'loyaltyPoints', NEW.loyaltyPoints),
+        USER()
+    );
+END$$
+DELIMITER ;
+
+-- Trigger for 'customer' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_customer_after_delete
+AFTER DELETE ON customer
+FOR EACH ROW
+BEGIN
+    INSERT INTO CustomerAudit (CustomerID, Action, OldData, ChangedBy)
+    VALUES (OLD.customerID, 'DELETE', JSON_OBJECT('firstName', OLD.firstName, 'lastName', OLD.lastName, 'email', OLD.email, 'contactNo', OLD.contactNo, 'loyaltyPoints', OLD.loyaltyPoints), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'category' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_category_after_insert
+AFTER INSERT ON category
+FOR EACH ROW
+BEGIN
+    INSERT INTO CategoryAudit (CategoryID, Action, NewData, ChangedBy)
+    VALUES (NEW.categoryID, 'INSERT', JSON_OBJECT('type', NEW.type), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'category' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_category_after_update
+AFTER UPDATE ON category
+FOR EACH ROW
+BEGIN
+    INSERT INTO CategoryAudit (CategoryID, Action, OldData, NewData, ChangedBy)
+    VALUES (OLD.categoryID, 'UPDATE', JSON_OBJECT('type', OLD.type), JSON_OBJECT('type', NEW.type), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'category' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_category_after_delete
+AFTER DELETE ON category
+FOR EACH ROW
+BEGIN
+    INSERT INTO CategoryAudit (CategoryID, Action, OldData, ChangedBy)
+    VALUES (OLD.categoryID, 'DELETE', JSON_OBJECT('type', OLD.type), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'invoice' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_invoice_after_insert
+AFTER INSERT ON invoice
+FOR EACH ROW
+BEGIN
+    INSERT INTO InvoiceAudit (InvoiceID, Action, NewData, ChangedBy)
+    VALUES (NEW.invoiceID, 'INSERT', JSON_OBJECT('orderID', NEW.orderID, 'invoiceDate', NEW.invoiceDate, 'totalAmount', NEW.totalAmount, 'discount', NEW.discount, 'paymentType', NEW.paymentType), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'invoice' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_invoice_after_update
+AFTER UPDATE ON invoice
+FOR EACH ROW
+BEGIN
+    INSERT INTO InvoiceAudit (InvoiceID, Action, OldData, NewData, ChangedBy)
+    VALUES (
+        OLD.invoiceID,
+        'UPDATE',
+        JSON_OBJECT('orderID', OLD.orderID, 'invoiceDate', OLD.invoiceDate, 'totalAmount', OLD.totalAmount, 'discount', OLD.discount, 'paymentType', OLD.paymentType),
+        JSON_OBJECT('orderID', NEW.orderID, 'invoiceDate', NEW.invoiceDate, 'totalAmount', NEW.totalAmount, 'discount', NEW.discount, 'paymentType', NEW.paymentType),
+        USER()
+    );
+END$$
+DELIMITER ;
+
+-- Trigger for 'invoice' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_invoice_after_delete
+AFTER DELETE ON invoice
+FOR EACH ROW
+BEGIN
+    INSERT INTO InvoiceAudit (InvoiceID, Action, OldData, ChangedBy)
+    VALUES (OLD.invoiceID, 'DELETE', JSON_OBJECT('orderID', OLD.orderID, 'invoiceDate', OLD.invoiceDate, 'totalAmount', OLD.totalAmount, 'discount', OLD.discount, 'paymentType', OLD.paymentType), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'order' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_order_after_insert
+AFTER INSERT ON `order`
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderAudit (OrderID, Action, NewData, ChangedBy)
+    VALUES (NEW.orderID, 'INSERT', JSON_OBJECT('customerID', NEW.customerID, 'totalAmount', NEW.totalAmount, 'orderDate', NEW.orderDate), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'order' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_order_after_update
+AFTER UPDATE ON `order`
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderAudit (OrderID, Action, OldData, NewData, ChangedBy)
+    VALUES (
+        OLD.orderID,
+        'UPDATE',
+        JSON_OBJECT('customerID', OLD.customerID, 'totalAmount', OLD.totalAmount, 'orderDate', OLD.orderDate),
+        JSON_OBJECT('customerID', NEW.customerID, 'totalAmount', NEW.totalAmount, 'orderDate', NEW.orderDate),
+        USER()
+    );
+END$$
+DELIMITER ;
+
+-- Trigger for 'order' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_order_after_delete
+AFTER DELETE ON `order`
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderAudit (OrderID, Action, OldData, ChangedBy)
+    VALUES (OLD.orderID, 'DELETE', JSON_OBJECT('customerID', OLD.customerID, 'totalAmount', OLD.totalAmount, 'orderDate', OLD.orderDate), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'order_item' table - AFTER INSERT
+DELIMITER $$
+CREATE TRIGGER trg_order_item_after_insert
+AFTER INSERT ON order_item
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderItemAudit (OrderItemID, Action, NewData, ChangedBy)
+    VALUES (NEW.orderItemID, 'INSERT', JSON_OBJECT('orderID', NEW.orderID, 'itemID', NEW.itemID, 'quantity', NEW.quantity), USER());
+END$$
+DELIMITER ;
+
+-- Trigger for 'order_item' table - AFTER UPDATE
+DELIMITER $$
+CREATE TRIGGER trg_order_item_after_update
+AFTER UPDATE ON order_item
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderItemAudit (OrderItemID, Action, OldData, NewData, ChangedBy)
+    VALUES (
+        OLD.orderItemID,
+        'UPDATE',
+        JSON_OBJECT('orderID', OLD.orderID, 'itemID', OLD.itemID, 'quantity', OLD.quantity),
+        JSON_OBJECT('orderID', NEW.orderID, 'itemID', NEW.itemID, 'quantity', NEW.quantity),
+        USER()
+    );
+END$$
+DELIMITER ;
+
+-- Trigger for 'order_item' table - AFTER DELETE
+DELIMITER $$
+CREATE TRIGGER trg_order_item_after_delete
+AFTER DELETE ON order_item
+FOR EACH ROW
+BEGIN
+    INSERT INTO OrderItemAudit (OrderItemID, Action, OldData, ChangedBy)
+    VALUES (OLD.orderItemID, 'DELETE', JSON_OBJECT('orderID', OLD.orderID, 'itemID', OLD.itemID, 'quantity', OLD.quantity), USER());
+END$$
+DELIMITER ;
 
 
 
