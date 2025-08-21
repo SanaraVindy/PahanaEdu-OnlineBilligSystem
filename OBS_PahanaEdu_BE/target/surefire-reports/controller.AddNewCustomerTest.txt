@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: controller.AddNewCustomerTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.293 s -- in controller.AddNewCustomerTest
