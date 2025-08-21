@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 @WebServlet("/api/customers/*")
 public class CustomerController extends HttpServlet {
 
-    // Removed the 'final' keyword and initialization.
     private CustomerService customerService;
     private final Gson gson = new Gson();
 
@@ -42,22 +41,45 @@ public class CustomerController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String searchText = request.getParameter("search");
-        String mobile = request.getParameter("mobile");
-
-        List<Customer> customers;
-        if ((searchText != null && !searchText.trim().isEmpty()) || (mobile != null && !mobile.trim().isEmpty())) {
-            customers = customerService.searchCustomers(searchText, mobile);
-        } else {
-            customers = customerService.getAllCustomers();
-        }
-
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
-        out.print(gson.toJson(customers));
+        
+        // Check if the request URL has a path for a specific customer ID
+        String pathInfo = request.getPathInfo();
+        if (pathInfo != null && pathInfo.length() > 1) { // e.g., /123
+            try {
+                int customerId = Integer.parseInt(pathInfo.substring(1));
+                Customer customer = customerService.getCustomerById(customerId);
+
+                if (customer != null) {
+                    out.print(gson.toJson(customer));
+                    response.setStatus(HttpServletResponse.SC_OK);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    out.print(gson.toJson(Map.of("error", "Customer not found")));
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(Map.of("error", "Invalid customer ID format")));
+            }
+        } else {
+            // Logic for getting all customers or searching
+            String searchText = request.getParameter("search");
+            String mobile = request.getParameter("mobile");
+
+            List<Customer> customers;
+            if ((searchText != null && !searchText.trim().isEmpty()) || (mobile != null && !mobile.trim().isEmpty())) {
+                customers = customerService.searchCustomers(searchText, mobile);
+            } else {
+                customers = customerService.getAllCustomers();
+            }
+            out.print(gson.toJson(customers));
+            response.setStatus(HttpServletResponse.SC_OK);
+        }
+        
         out.flush();
     }
-
+    
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
@@ -110,7 +132,6 @@ public class CustomerController extends HttpServlet {
                     Map.of("error", "Invalid JSON format")
             ));
         } catch (Exception e) {
-            // This now correctly catches the SQLIntegrityConstraintViolationException
             System.err.println("Server error: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(gson.toJson(
@@ -124,7 +145,6 @@ public class CustomerController extends HttpServlet {
         return str == null || str.trim().isEmpty();
     }
     
-    // ... (doPut and doDelete methods remain unchanged)
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");

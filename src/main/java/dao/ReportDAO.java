@@ -18,6 +18,7 @@ public class ReportDAO {
 
     /**
      * Executes the GetTopCustomersAndItemSummary stored procedure and returns the results.
+     *
      * @param fromDate The start date for the report.
      * @param toDate The end date for the report.
      * @param customerLimit The number of top customers to return.
@@ -26,8 +27,7 @@ public class ReportDAO {
      */
     public List<Report> getTopCustomersReport(String fromDate, String toDate, int customerLimit) throws SQLException {
         List<Report> reports = new ArrayList<>();
-        // Use a try-with-resources statement to ensure the connection and statement are closed.
-        // NOTE: The stored procedure name has been corrected to match your SQL.
+        // Excellent use of a try-with-resources statement to ensure the connection and statement are closed automatically.
         try (Connection conn = DBConnection.getConnection();
              CallableStatement cs = conn.prepareCall("{CALL GetTopCustomersAndItemSummary(?, ?, ?)}")) {
 
@@ -40,8 +40,8 @@ public class ReportDAO {
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Report report = new Report();
-                    // NOTE: The column name for rank has been corrected to "Rank".
-                    report.setRank(rs.getInt("Rank")); 
+                    // NOTE: The column names here must exactly match the column names in the ResultSet.
+                    report.setRank(rs.getInt("Rank"));
                     report.setFirstName(rs.getString("firstName"));
                     report.setLastName(rs.getString("lastName"));
                     report.setEmail(rs.getString("email"));
@@ -58,14 +58,14 @@ public class ReportDAO {
 
     /**
      * Retrieves a monthly sales summary from the database by calling a stored procedure.
+     *
      * @param year The year for the report.
      * @return A list of MonthlySalesSummary objects.
      * @throws SQLException if a database access error occurs.
      */
     public List<MonthlySalesSummary> getMonthlySalesSummary(String year) throws SQLException {
         List<MonthlySalesSummary> summary = new ArrayList<>();
-        // Use a try-with-resources statement to ensure the connection and statement are closed.
-        // This replaces the placeholder data with a real database call.
+        // Again, a great use of a try-with-resources statement.
         try (Connection conn = DBConnection.getConnection();
              CallableStatement cs = conn.prepareCall("{CALL GetMonthlySalesSummary(?)}")) {
             

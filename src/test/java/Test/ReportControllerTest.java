@@ -45,17 +45,11 @@ public class ReportControllerTest {
         // Correctly initialize the Gson object.
         gson = new Gson();
         
-        // Manually inject the mocked DAO into the controller.
-        // This is necessary because @InjectMocks doesn't always work as expected
-        // for private fields, and ensures the test uses our mock.
+  
         reportController.setReportDAO(reportDAO);
     }
 
-    /**
-     * Test case for the 'Top Customers' report generation.
-     * This test verifies that the controller correctly calls the DAO and
-     * returns a 200 OK status with the correct JSON data.
-     */
+   
     @Test
     void testGetTopCustomersReport_Success() throws SQLException {
         // Prepare mock data that the DAO will return.

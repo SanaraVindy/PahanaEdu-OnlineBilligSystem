@@ -1,9 +1,5 @@
 package model;
 
-/**
- * A model class to represent a monthly sales summary report.
- * This class is used to map database query results to a Java object.
- */
 public class MonthlySalesSummary {
     private String month;
     private double totalRevenue;
