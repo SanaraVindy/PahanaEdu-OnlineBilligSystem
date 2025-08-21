@@ -42,14 +42,7 @@ public class ReportControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Correctly initialize the Gson object.
-        gson = new Gson();
-        
-  
-        reportController.setReportDAO(reportDAO);
-    }
 
-   
     @Test
     void testGetTopCustomersReport_Success() throws SQLException {
         // Prepare mock data that the DAO will return.

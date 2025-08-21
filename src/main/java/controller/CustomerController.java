@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @WebServlet("/api/customers/*")
 public class CustomerController extends HttpServlet {
 
+
     private CustomerService customerService;
     private final Gson gson = new Gson();
 
@@ -100,6 +101,7 @@ public class CustomerController extends HttpServlet {
                 return;
             }
 
+
             if (isNullOrEmpty(customer.getFirstName()) ||
                 isNullOrEmpty(customer.getLastName()) ||
                 isNullOrEmpty(customer.getEmail()) ||
@@ -132,6 +134,7 @@ public class CustomerController extends HttpServlet {
                     Map.of("error", "Invalid JSON format")
             ));
         } catch (Exception e) {
+
             System.err.println("Server error: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(gson.toJson(
@@ -145,6 +148,7 @@ public class CustomerController extends HttpServlet {
         return str == null || str.trim().isEmpty();
     }
     
+
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
