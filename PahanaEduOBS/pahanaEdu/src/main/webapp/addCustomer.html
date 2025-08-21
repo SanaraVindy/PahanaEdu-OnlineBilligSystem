@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Add Customer - PahanaEdu</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container-box {
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.94);
+            padding: 40px 30px;
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+        .title-header {
+            background: linear-gradient(to right, #6a1b9a, #ab47bc);
+            color: white;
+            padding: 18px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .btn-purple {
+            background-color: #6a1b9a;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .btn-purple:hover {
+            background-color: #4a148c;
+        }
+        .form-control {
+            border-radius: 10px;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 5px rgba(106, 27, 154, 0.6);
+            border-color: #6a1b9a;
+        }
+        .error-msg {
+            color: red;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(to right, #6a1b9a, #8e24aa); padding: 10px 30px;">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="dashboard.html">
+            <i class="bi bi-house-door-fill"></i> PahanaEdu
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-between" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="dashboard.html">
+                        <i class="bi bi-house-fill"></i> Home
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex">
+                <a href="logout.html" class="btn btn-light text-dark fw-semibold rounded-pill">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+<div class="container-box">
+    <div class="title-header">
+        <i class="bi bi-person-plus-fill me-2"></i> Add Customer - PahanaEdu
+    </div>
+
+    <form id="customerForm" onsubmit="addCustomer(event)">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="firstName" class="form-label">First Name</label>
+                <input type="text" id="firstName" class="form-control" placeholder="Enter the first name" required />
+                <div class="error-msg" id="firstNameError"></div>
+            </div>
+            <div class="col-md-6">
+                <label for="lastName" class="form-label">Last Name</label>
+                <input type="text" id="lastName" class="form-control" placeholder="Enter the last name" required />
+                <div class="error-msg" id="lastNameError"></div>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter email" required />
+                <div class="error-msg" id="emailError"></div>
+            </div>
+            <div class="col-md-6">
+                <label for="contactNo" class="form-label">Contact Number</label>
+                <input type="tel" id="contactNo" class="form-control" placeholder="Enter contact number" required />
+                <div class="error-msg" id="contactNoError"></div>
+            </div>
+            <div class="col-md-6">
+                <label for="loyaltyPoints" class="form-label">Customer Points</label>
+                <input type="number" id="loyaltyPoints" class="form-control" placeholder="0" min="0" value="0" />
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <button type="submit" class="btn btn-purple me-2"><i class="bi bi-save2-fill me-1"></i> Save Customer</button>
+            <button type="reset" class="btn btn-outline-secondary"><i class="bi bi-x-circle me-1"></i> Clear</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function validateForm() {
+        let valid = true;
+        document.querySelectorAll(".error-msg").forEach(el => el.textContent = "");
+
+        const firstName = document.getElementById("firstName").value.trim();
+        const lastName = document.getElementById("lastName").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const contactNo = document.getElementById("contactNo").value.trim();
+
+        if (!/^[A-Za-z]+$/.test(firstName)) {
+            document.getElementById("firstNameError").textContent = "First name must contain only letters.";
+            valid = false;
+        }
+
+        if (!/^[A-Za-z]+$/.test(lastName)) {
+            document.getElementById("lastNameError").textContent = "Last name must contain only letters.";
+            valid = false;
+        }
+
+        if (!/^[A-Za-z0-9._%+-]+@gmail\.com$/.test(email)) {
+            document.getElementById("emailError").textContent = "Email must be a valid @gmail.com address.";
+            valid = false;
+        }
+
+        if (!/^\d{10}$/.test(contactNo)) {
+            document.getElementById("contactNoError").textContent = "Contact number must be exactly 10 digits.";
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    function addCustomer(event) {
+        event.preventDefault();
+
+        if (!validateForm()) return;
+
+        const customer = {
+            firstName: document.getElementById("firstName").value.trim(),
+            lastName: document.getElementById("lastName").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            contactNo: document.getElementById("contactNo").value.trim(),
+            loyaltyPoints: parseInt(document.getElementById("loyaltyPoints").value || 0)
+        };
+
+        fetch("http://localhost:8080/OBS_PahanaEdu_BE/api/customers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(customer)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("✅ Customer added successfully!");
+                document.querySelector("form").reset();
+            } else {
+                return response.text().then(text => { throw new Error(text); });
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error adding customer:", error);
+            alert("❌ Failed to add customer.");
+        });
+    }
+</script>
+
+</body>
+</html>
