@@ -1,2 +1,2 @@
-# PahanaEdu-OnlineBilligSystem
-Responsive online billing system for PahanaEdu Bookshop-Colombo
+# PahanaEdu-OnlineBillingSystem
+Responsive online billinng system for PahanaEdu Bookshop-Colombo
