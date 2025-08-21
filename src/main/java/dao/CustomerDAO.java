@@ -36,6 +36,30 @@ public List<Customer> getAllCustomers() {
     return customers;
 }
 
+public Customer getCustomerById(int customerId) {
+    Customer customer = null;
+    String sql = "SELECT customerID, firstName, lastName, email, contactNo, loyaltyPoints FROM pahanaedu.customer WHERE customerID = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, customerId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                customer = new Customer();
+                customer.setCustomerID(rs.getInt("customerID"));
+                customer.setFirstName(rs.getString("firstName"));
+                customer.setLastName(rs.getString("lastName"));
+                customer.setEmail(rs.getString("email"));
+                customer.setContactNo(rs.getString("contactNo"));
+                customer.setLoyaltyPoints(rs.getInt("loyaltyPoints"));
+            }
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return customer;
+}
+
     public List<Customer> searchCustomers(String searchText, String mobile) {
         List<Customer> customers = new ArrayList<>();
         StringBuilder sqlBuilder = new StringBuilder("SELECT customerID, firstName, lastName, email, contactNo, loyaltyPoints FROM pahanaedu.customer WHERE 1=1");

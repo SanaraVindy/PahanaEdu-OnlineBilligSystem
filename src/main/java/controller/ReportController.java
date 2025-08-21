@@ -1,81 +1,113 @@
 package controller;
 
 import com.google.gson.Gson;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import model.Report;
-import service.ReportService;
-
-import java.io.IOException;
+import dao.ReportDAO;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servlet acting as the API endpoint for fetching reports. It processes GET
- * requests and returns a JSON response.
+ * REST API for generating various reports.
+ * This class provides endpoints for top customers and monthly sales summaries.
  */
-@WebServlet("/api/top-customers")
-public class ReportController extends HttpServlet {
+@Path("/api/reports")
+public class ReportController {
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(ReportController.class.getName());
+    private ReportDAO reportDAO = new ReportDAO();
+    private final Gson gson = new Gson();
 
-    // Now the controller depends on the service layer, not the DAO.
-    private ReportService reportService = new ReportService();
+    /**
+     * Setter for the ReportDAO. This is a good pattern for dependency injection,
+     * which makes unit testing much easier.
+     * @param reportDAO The ReportDAO instance to set.
+     */
+    public void setReportDAO(ReportDAO reportDAO) {
+        this.reportDAO = reportDAO;
+    }
 
-    // Create a Gson instance for converting Java objects to JSON.
-    private Gson gson = new Gson();
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // Set the response content type to application/json.
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
+    /**
+     * Endpoint to get a report of top customers.
+     * Accessible via GET request to /reports/top-customers.
+     *
+     * @param fromDate The start date for the report.
+     * @param toDate The end date for the report.
+     * @param customerLimit The number of top customers to return.
+     * @return A JSON response containing the list of top customers or an error message.
+     */
+    @GET
+    @Path("/top-customers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTopCustomersReport(@QueryParam("fromDate") String fromDate,
+                                          @QueryParam("toDate") String toDate,
+                                          @QueryParam("limit") int customerLimit) {
+        // Good use of logging to trace incoming requests.
+        LOGGER.log(Level.INFO, "Request received for getTopCustomersReport with fromDate: {0}, toDate: {1}, limit: {2}", new Object[]{fromDate, toDate, customerLimit});
         try {
-            // Get query parameters from the request.
-            String fromDate = request.getParameter("startDate");
-            String toDate = request.getParameter("endDate");
-            System.out.println(fromDate);
-            System.out.println(toDate);
-            // Handle the case where the limit parameter is null or invalid.
-            int customerLimit;
-            String limitParam = request.getParameter("limit");
-            if (limitParam == null || limitParam.trim().isEmpty()) {
-                customerLimit = 10; // Default limit if not provided
-            } else {
-                customerLimit = Integer.parseInt(limitParam);
+            // Excellent input validation at the API entry point.
+            if (fromDate == null || toDate == null || fromDate.isEmpty() || toDate.isEmpty()) {
+                LOGGER.log(Level.WARNING, "Invalid input: fromDate or toDate is missing.");
+                return Response.status(Response.Status.BAD_REQUEST).entity("From date and to date are required.").build();
             }
-            System.out.println(limitParam);
-            // Call the service layer to get the data.
-            List<Report> reports = reportService.getTopCustomersReport(fromDate, toDate, customerLimit);
 
-            // Convert the list of Report objects to a JSON string.
-            String jsonResponse = gson.toJson(reports);
+            // Retrieve the report data from the DAO.
+            // NOTE: The code in the `ReportService` already performs validation.
+            // You could call the service method here instead of the DAO directly
+            // to maintain a consistent API flow.
+            // Example: var reports = new ReportService().getTopCustomersReport(fromDate, toDate, customerLimit);
+            var reports = reportDAO.getTopCustomersReport(fromDate, toDate, customerLimit);
+            
+            // Return a success response with the report data in JSON format.
+            return Response.ok(gson.toJson(reports)).build();
+        } catch (SQLException e) {
+            // Proper handling for database-specific exceptions.
+            LOGGER.log(Level.SEVERE, "Database error occurred while fetching top customers report.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Database error: " + e.getMessage()).build();
+        } catch (Exception e) {
+            // A catch-all for other unexpected exceptions.
+            LOGGER.log(Level.SEVERE, "An unexpected error occurred while fetching top customers report.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
+    }
 
-            // Write the JSON response to the output stream.
-            response.getWriter().write(jsonResponse);
+    /**
+     * Endpoint to get a monthly sales summary report.
+     * Accessible via GET request to /reports/monthly-sales-summary.
+     *
+     * @param year The year for which to generate the report.
+     * @return A JSON response containing the monthly sales summary data or an error message.
+     */
+    @GET
+    @Path("/monthly-sales-summary")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMonthlySalesSummaryReport(@QueryParam("year") String year) {
+        LOGGER.log(Level.INFO, "Request received for getMonthlySalesSummaryReport for year: {0}", year);
+        try {
+            // Good validation for the year parameter.
+            if (year == null || year.isEmpty()) {
+                LOGGER.log(Level.WARNING, "Invalid input: year is missing.");
+                return Response.status(Response.Status.BAD_REQUEST).entity("Year parameter is required.").build();
+            }
 
-        } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 status code
-            response.getWriter().write("{\"error\": \"Invalid number format for customer limit.\"}");
-        } catch (SQLException ex) {
-            Logger.getLogger(ReportController.class.getName()).log(Level.SEVERE, "Database error while fetching report.", ex);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // 500 status code
-            response.getWriter().write("{\"error\": \"A database error occurred.\"}");
-        } catch (IllegalArgumentException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
-        } catch (Exception ex) {
-            Logger.getLogger(ReportController.class.getName()).log(Level.SEVERE, "An unexpected error occurred.", ex);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // 500 status code
-            response.getWriter().write("{\"error\": \"An unexpected error occurred.\"}");
+            // You could call the service method here instead of the DAO directly.
+            // Example: var summary = new ReportService().getMonthlySalesSummary(year);
+            var summary = reportDAO.getMonthlySalesSummary(year);
+
+            // Return a success response with the summary data in JSON format.
+            return Response.ok(gson.toJson(summary)).build();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Database error occurred while fetching monthly sales summary.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Database error: " + e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "An unexpected error occurred while fetching monthly sales summary.", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
         }
     }
 }

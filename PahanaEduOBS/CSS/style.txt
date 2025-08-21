@@ -1,0 +1,47 @@
+/* Common background */
+body {
+  background: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f') no-repeat center center fixed;
+  background-size: cover;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Card & Frame styles */
+.card-box, .form-container {
+  background: linear-gradient(to right, #7b1fa2, #9c27b0);
+  color: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.card-box:hover, .form-container:hover {
+  transform: scale(1.03);
+}
+
+/* Input field styles */
+.form-control:focus {
+  box-shadow: 0 0 5px rgba(106, 27, 154, 0.6);
+  border-color: #6a1b9a;
+}
+
+/* Button style */
+.btn-theme {
+  background-color: #6a1b9a;
+  border: none;
+  color: white;
+}
+
+.btn-theme:hover {
+  background-color: #4a148c;
+}
+
+/* Section titles */
+.section-title {
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}

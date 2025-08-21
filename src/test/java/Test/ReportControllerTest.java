@@ -42,14 +42,7 @@ public class ReportControllerTest {
 
     @BeforeEach
     void setUp() {
-        gson = new Gson();
-    }
 
-    /**
-     * Test case for the 'Top Customers' report generation.
-     * This test verifies that the controller correctly calls the DAO and
-     * returns a 200 OK status with the correct JSON data.
-     */
     @Test
     void testGetTopCustomersReport_Success() throws SQLException {
         // Prepare mock data that the DAO will return.

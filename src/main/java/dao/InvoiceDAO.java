@@ -27,7 +27,11 @@ public class InvoiceDAO {
         String sql = "INSERT INTO invoice (orderID, invoiceDate, totalAmount, discount, paymentType) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, invoice.getOrderID());
-            ps.setTimestamp(2, new Timestamp(invoice.getInvoiceDate().getTime()));
+            
+            // Fix: Check if invoice.getInvoiceDate() is null. If so, use the current timestamp.
+            Date invoiceDate = invoice.getInvoiceDate() != null ? invoice.getInvoiceDate() : new Date();
+            ps.setTimestamp(2, new Timestamp(invoiceDate.getTime()));
+            
             ps.setBigDecimal(3, invoice.getTotalAmount());
             ps.setBigDecimal(4, invoice.getDiscount());
             ps.setString(5, invoice.getPaymentType());
@@ -86,7 +90,11 @@ public class InvoiceDAO {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, invoice.getOrderID());
-            ps.setTimestamp(2, new Timestamp(invoice.getInvoiceDate().getTime()));
+            
+            // Fix: Check if invoice.getInvoiceDate() is null. If so, use the current timestamp.
+            Date invoiceDate = invoice.getInvoiceDate() != null ? invoice.getInvoiceDate() : new Date();
+            ps.setTimestamp(2, new Timestamp(invoiceDate.getTime()));
+            
             ps.setBigDecimal(3, invoice.getTotalAmount());
             ps.setBigDecimal(4, invoice.getDiscount());
             ps.setString(5, invoice.getPaymentType());
