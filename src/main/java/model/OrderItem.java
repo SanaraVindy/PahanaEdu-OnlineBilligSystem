@@ -17,6 +17,16 @@ public class OrderItem {
     // Default constructor
     public OrderItem() {
     }
+    
+    /**
+     * Constructor for creating a new order item with item ID and quantity.
+     * @param itemID The ID of the item being purchased.
+     * @param quantity The number of units of the item.
+     */
+    public OrderItem(int itemID, int quantity) {
+        this.itemID = itemID;
+        this.quantity = quantity;
+    }
 
     /**
      * Constructor for creating a new order item.
@@ -75,5 +85,9 @@ public class OrderItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public void setPrice(BigDecimal multiply) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

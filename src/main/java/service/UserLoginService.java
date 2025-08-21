@@ -9,8 +9,15 @@ import model.User;
 
 public class UserLoginService {
 
-    private final UserLoginDAO userLoginDAO = new UserLoginDAO();
-    private final UserDAO userDAO = new UserDAO();
+    private final UserLoginDAO userLoginDAO;
+    private final UserDAO userDAO;
+
+    // Correct way to use dependency injection for testing.
+    // The test class will now provide mock instances here.
+    public UserLoginService(UserLoginDAO userLoginDAO, UserDAO userDAO) {
+        this.userLoginDAO = userLoginDAO;
+        this.userDAO = userDAO;
+    }
 
     /**
      * Hashes the input password using SHA-256 and encodes in Base64.
@@ -30,55 +37,56 @@ public class UserLoginService {
      * Validates login credentials and checks if password change is needed.
      */
     public JsonObject validateUser(String username, String password) {
-    JsonObject jsonResponse = new JsonObject();
-    String[] dbData = userLoginDAO.getPasswordDetailsByUsername(username);
-System.out.print(username);
-    if (dbData != null) {
-        String storedHashedPassword = dbData[0];
-        int userID = Integer.parseInt(dbData[1]);
-        boolean passwordChanged = Boolean.parseBoolean(dbData[2]);
+        JsonObject jsonResponse = new JsonObject();
         
-        // Fix 1: Trim the password before hashing
-        String trimmedPassword = password.trim(); 
-        String hashedPasswordInput = hashPassword(trimmedPassword);
+        // Handle null or empty passwords before attempting to trim
+        if (password == null || password.trim().isEmpty()) {
+            jsonResponse.addProperty("success", false);
+            jsonResponse.addProperty("message", "Username and password are required.");
+            return jsonResponse;
+        }
 
-        // DEBUG: print hashes
-        System.out.println("Username: " + username);
-        System.out.println(">>> Input hash:    " + hashedPasswordInput);
-        System.out.println(">>> Stored hash:   " + storedHashedPassword);
-        System.out.println(">>> Stored length: " + storedHashedPassword.length());
-        System.out.println(">>> Input length:  " + hashedPasswordInput.length());
+        String[] dbData = userLoginDAO.getPasswordDetailsByUsername(username);
+        
+        if (dbData != null) {
+            String storedHashedPassword = dbData[0];
+            int userID = Integer.parseInt(dbData[1]);
+            boolean passwordChanged = Boolean.parseBoolean(dbData[2]);
+            
+            String trimmedPassword = password.trim();
+            String hashedPasswordInput = hashPassword(trimmedPassword);
 
-        if (hashedPasswordInput != null && hashedPasswordInput.equals(storedHashedPassword)) {
-            if (!passwordChanged) {
-                jsonResponse.addProperty("success", true);
-                jsonResponse.addProperty("message", "Initial login detected. Please change your password.");
-                jsonResponse.addProperty("passwordChanged", false);
-                jsonResponse.addProperty("userID", userID);
-            } else {
-                User user = userDAO.getUserDetails(userID);
-                if (user != null) {
+            if (hashedPasswordInput != null && hashedPasswordInput.equals(storedHashedPassword)) {
+                if (!passwordChanged) {
                     jsonResponse.addProperty("success", true);
-                    jsonResponse.addProperty("message", "Login successful.");
-                    jsonResponse.addProperty("firstName", user.getFirstName());
-                    jsonResponse.addProperty("roleID", user.getRoleID());
-                    jsonResponse.addProperty("passwordChanged", true);
+                    jsonResponse.addProperty("message", "Initial login detected. Please change your password.");
+                    jsonResponse.addProperty("passwordChanged", false);
+                    jsonResponse.addProperty("userID", userID);
                 } else {
-                    jsonResponse.addProperty("success", false);
-                    jsonResponse.addProperty("message", "User details not found.");
+                    User user = userDAO.getUserDetails(userID);
+                    if (user != null) {
+                        jsonResponse.addProperty("success", true);
+                        jsonResponse.addProperty("message", "Login successful.");
+                        jsonResponse.addProperty("firstName", user.getFirstName());
+                        jsonResponse.addProperty("roleID", user.getRoleID());
+                        jsonResponse.addProperty("passwordChanged", true);
+                    } else {
+                        jsonResponse.addProperty("success", false);
+                        jsonResponse.addProperty("message", "User details not found.");
+                    }
                 }
+            } else {
+                jsonResponse.addProperty("success", false);
+                jsonResponse.addProperty("message", "Invalid username or password.");
             }
         } else {
             jsonResponse.addProperty("success", false);
             jsonResponse.addProperty("message", "Invalid username or password.");
         }
-    } else {
-        jsonResponse.addProperty("success", false);
-        jsonResponse.addProperty("message", "Invalid username or password.");
+
+        return jsonResponse;
     }
 
-    return jsonResponse;
-}
     /**
      * Handles password change request.
      */

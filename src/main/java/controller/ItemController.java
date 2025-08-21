@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Item;
 import service.ItemService;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -18,6 +17,12 @@ import java.util.List;
 /**
  * Servlet for handling all item-related API requests.
  * It supports CRUD operations for items.
+ * The paths are handled based on `request.getPathInfo()`.
+ * - GET /api/items/ -> Get all items or search.
+ * - GET /api/items/{id} -> Get a single item by ID.
+ * - POST /api/items/ -> Add a new item.
+ * - PUT /api/items/{id} -> Update an existing item.
+ * - DELETE /api/items/{id} -> Delete an item.
  */
 @WebServlet("/api/items/*")
 public class ItemController extends HttpServlet {
@@ -202,6 +207,7 @@ public class ItemController extends HttpServlet {
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"error\":\"Server error: " + e.getMessage() + "\"}");
+            e.printStackTrace();
         }
     }
     
@@ -239,6 +245,7 @@ public class ItemController extends HttpServlet {
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"error\":\"Server error: " + e.getMessage() + "\"}");
+            e.printStackTrace();
         }
     }
 }

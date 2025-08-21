@@ -1,134 +1,222 @@
-//package Test;
-//
-//import com.google.gson.JsonObject;
-//import dao.UserDAO;
-//import dao.UserLoginDAO;
-//import model.User;
-//import service.UserLoginService;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.MockitoAnnotations;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.mockito.Mockito.when;
-//
-//public class UserLoginTest {
-//
-//    @Mock
-//    private UserLoginDAO userLoginDAO;
-//
-//    @Mock
-//    private UserDAO userDAO;
-//
-//    @InjectMocks
-//    private UserLoginService userLoginService;
-//
-//    @BeforeEach
-//    public void setUp() {
-//        MockitoAnnotations.openMocks(this);
-//    }
-//    
-//    // Test case for a successful login where the password has been changed
-//    @Test
-//    public void testValidateUser_Success_PasswordChanged() {
-//        // 1. Arrange: Set up the mock data and behavior
-//        String username = "testuser";
-//        String password = "testpassword";
-//        
-//        // Use the service's hashing method to generate the correct hash for comparison
-//        String correctHash = userLoginService.hashPassword(password);
-//        
-//        // Mock the UserLoginDAO to return the correct password details
-//        when(userLoginDAO.getPasswordDetailsByUsername(username))
-//            .thenReturn(new String[]{correctHash, "1", "true"});
-//
-//        // Mock the UserDAO to return a User object
-//        User mockUser = new User();
-//        mockUser.setFirstName("Test");
-//        mockUser.setRoleID(2);
-//        when(userDAO.getUserDetails(1)).thenReturn(mockUser);
-//
-//        // 2. Act: Call the method being tested
-//        JsonObject response = userLoginService.validateUser(username, password);
-//
-//        // 3. Assert: Verify the results
-//        assertEquals(true, response.get("success").getAsBoolean(), "Login should be successful");
-//        assertEquals("Login successful.", response.get("message").getAsString(), "Message should be correct");
-//        assertEquals("Test", response.get("firstName").getAsString(), "First name should match");
-//        assertEquals(2, response.get("roleID").getAsInt(), "Role ID should match");
-//        assertEquals(true, response.get("passwordChanged").getAsBoolean(), "passwordChanged should be true");
-//    }
-//    
-//    // Test case for a failed login with an incorrect password
-//    @Test
-//    public void testValidateUser_Failure_InvalidPassword() {
-//        // 1. Arrange: Set up the mock data and behavior
-//        String username = "testuser";
-//        String correctPassword = "testpassword";
-//        String wrongPassword = "wrongpassword";
-//        
-//        // Mock the DAO to return the hash of the correct password
-//        String correctHash = userLoginService.hashPassword(correctPassword);
-//        when(userLoginDAO.getPasswordDetailsByUsername(username))
-//            .thenReturn(new String[]{correctHash, "1", "true"});
-//
-//        // 2. Act: Call the method with the incorrect password
-//        JsonObject response = userLoginService.validateUser(username, wrongPassword);
-//
-//        // 3. Assert: Verify the results
-//        assertEquals(false, response.get("success").getAsBoolean(), "Login should fail");
-//        assertEquals("Invalid username or password.", response.get("message").getAsString(), "Message should indicate failure");
-//    }
-//    
-//    // Test case for a new user's initial login, requiring a password change
-//    @Test
-//    public void testValidateUser_InitialLogin_PasswordNotChanged() {
-//        // 1. Arrange: Set up the mock data for an initial login
-//        String username = "newuser";
-//        String password = "newuser@123";
-//        
-//        // Mock the DAO to return a user with passwordChanged = false
-//        String correctHash = userLoginService.hashPassword(password);
-//        when(userLoginDAO.getPasswordDetailsByUsername(username))
-//            .thenReturn(new String[]{correctHash, "2", "false"});
-//
-//        // 2. Act: Call the method
-//        JsonObject response = userLoginService.validateUser(username, password);
-//        
-//        // 3. Assert: Verify the results
-//        assertEquals(true, response.get("success").getAsBoolean(), "Initial login should be successful");
-//        assertEquals("Initial login detected. Please change your password.", response.get("message").getAsString(), "Message should prompt password change");
-//        assertEquals(false, response.get("passwordChanged").getAsBoolean(), "passwordChanged should be false");
-//        assertEquals(2, response.get("userID").getAsInt(), "User ID should be returned");
-//    }
-//    
-//    // Test case for a non-existent user
-//    @Test
-//    public void testValidateUser_UserNotFound() {
-//        // 1. Arrange: Set up the mock DAO to return no user data (null)
-//        String username = "nonexistentuser";
-//        String password = "somepassword";
-//        
-//        when(userLoginDAO.getPasswordDetailsByUsername(username)).thenReturn(null);
-//
-//        // 2. Act: Call the method with a non-existent username
-//        JsonObject response = userLoginService.validateUser(username, password);
-//
-//        // 3. Assert: Verify the results
-//        assertEquals(false, response.get("success").getAsBoolean(), "Login should fail");
-//        assertEquals("Invalid username or password.", response.get("message").getAsString(), "Message should indicate failure");
-//    }
-//    
-//    // Test to ensure the hashPassword method works as expected
-//    @Test
-//    public void testHashPassword() {
-//        String password = "testpassword";
-//        String expectedHash = "WfFjW9xM8h549qF/y6Xo9k66e852qYtW2d6yWqR/E1Y="; 
-//        
-//        String actualHash = userLoginService.hashPassword(password);
-//        
-//        assertEquals(expectedHash, actualHash, "Generated hash should match the expected hash");
-//    }
-//}
+package Test;
+
+import com.google.gson.JsonObject;
+import dao.UserDAO;
+import dao.UserLoginDAO;
+import model.User;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import service.UserLoginService;
+
+import static org.mockito.Mockito.*;
+
+/**
+ * JUnit 5 test class for the UserLoginService.
+ * This class uses Mockito to mock the DAO dependencies, allowing for isolated
+ * testing of the service's business logic without a real database.
+ * The provided template has been filled with comprehensive test cases.
+ */
+public class UserLoginTest {
+
+    // @Mock creates a mock instance of the class
+    @Mock
+    private UserLoginDAO userLoginDAO;
+    @Mock
+    private UserDAO userDAO;
+
+    // The service instance is now manually created in the setup method
+    private UserLoginService userLoginService;
+
+    // A sample password to use for testing
+    private static final String TEST_PASSWORD = "testPassword123";
+
+    private static final String TEST_USERNAME = "testuser";
+    private static final int TEST_USER_ID = 101;
+    private static final String TEST_FIRST_NAME = "Tester";
+    private static final int TEST_ROLE_ID = 1;
+
+    @BeforeAll
+    public static void setUpClass() {
+    }
+
+    @AfterAll
+    public static void tearDownClass() {
+    }
+
+    /**
+     * This method runs before each test. It initializes the Mockito mocks and
+     * then manually injects them into the service class.
+     */
+    @BeforeEach
+    public void setUp() {
+        // Initialize the mocks created with the @Mock annotation
+        MockitoAnnotations.openMocks(this);
+        // Manually create the service instance, injecting the mocks
+        userLoginService = new UserLoginService(userLoginDAO, userDAO);
+    }
+
+    @AfterEach
+    public void tearDown() {
+    }
+
+    /**
+     * Test case for a successful login with a password that has already been changed.
+     * This simulates a normal, successful login.
+     */
+    @Test
+    public void testValidateUser_SuccessfulLogin() {
+        // --- GIVEN ---
+        // Dynamically get the hashed password from the service's own method
+        String hashedPassword = userLoginService.hashPassword(TEST_PASSWORD);
+
+        when(userLoginDAO.getPasswordDetailsByUsername(TEST_USERNAME))
+                .thenReturn(new String[]{hashedPassword, String.valueOf(TEST_USER_ID), "true"});
+
+        User mockUser = new User();
+        mockUser.setUserID(TEST_USER_ID);
+        mockUser.setFirstName(TEST_FIRST_NAME);
+        mockUser.setRoleID(TEST_ROLE_ID);
+        when(userDAO.getUserDetails(TEST_USER_ID)).thenReturn(mockUser);
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.validateUser(TEST_USERNAME, TEST_PASSWORD);
+
+        // --- THEN ---
+        assertTrue(result.get("success").getAsBoolean(), "Login should be successful");
+        assertEquals("Login successful.", result.get("message").getAsString(), "Message should indicate success");
+        assertEquals(TEST_FIRST_NAME, result.get("firstName").getAsString(), "First name should match");
+        assertEquals(TEST_ROLE_ID, result.get("roleID").getAsInt(), "Role ID should match");
+        assertTrue(result.get("passwordChanged").getAsBoolean(), "passwordChanged flag should be true");
+
+        verify(userLoginDAO, times(1)).getPasswordDetailsByUsername(TEST_USERNAME);
+        verify(userDAO, times(1)).getUserDetails(TEST_USER_ID);
+    }
+
+    /**
+     * Test case for a successful initial login, where the user is prompted to change their password.
+     */
+    @Test
+    public void testValidateUser_InitialLogin_PasswordChangeNeeded() {
+        // --- GIVEN ---
+        // Dynamically get the hashed password from the service's own method
+        String hashedPassword = userLoginService.hashPassword(TEST_PASSWORD);
+
+        when(userLoginDAO.getPasswordDetailsByUsername(TEST_USERNAME))
+                .thenReturn(new String[]{hashedPassword, String.valueOf(TEST_USER_ID), "false"});
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.validateUser(TEST_USERNAME, TEST_PASSWORD);
+
+        // --- THEN ---
+        assertTrue(result.get("success").getAsBoolean(), "Login should be successful");
+        assertEquals("Initial login detected. Please change your password.", result.get("message").getAsString(), "Message should prompt for password change");
+        assertFalse(result.get("passwordChanged").getAsBoolean(), "passwordChanged flag should be false");
+        assertEquals(TEST_USER_ID, result.get("userID").getAsInt(), "User ID should be returned");
+
+        verify(userLoginDAO, times(1)).getPasswordDetailsByUsername(TEST_USERNAME);
+        verify(userDAO, never()).getUserDetails(anyInt());
+    }
+
+    /**
+     * Test case for a login attempt with an incorrect password.
+     */
+    @Test
+    public void testValidateUser_InvalidPassword() {
+        // --- GIVEN ---
+        String hashedPassword = userLoginService.hashPassword(TEST_PASSWORD);
+
+        when(userLoginDAO.getPasswordDetailsByUsername(TEST_USERNAME))
+                .thenReturn(new String[]{hashedPassword, String.valueOf(TEST_USER_ID), "true"});
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.validateUser(TEST_USERNAME, "wrongPassword");
+
+        // --- THEN ---
+        assertFalse(result.get("success").getAsBoolean(), "Login should fail with wrong password");
+        assertEquals("Invalid username or password.", result.get("message").getAsString(), "Message should indicate failure");
+
+        verify(userLoginDAO, times(1)).getPasswordDetailsByUsername(TEST_USERNAME);
+        verify(userDAO, never()).getUserDetails(anyInt());
+    }
+
+    /**
+     * Test case for a login attempt with a non-existent username.
+     */
+    @Test
+    public void testValidateUser_UserNotFound() {
+        // --- GIVEN ---
+        when(userLoginDAO.getPasswordDetailsByUsername(anyString())).thenReturn(null);
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.validateUser("nonexistentuser", TEST_PASSWORD);
+
+        // --- THEN ---
+        assertFalse(result.get("success").getAsBoolean(), "Login should fail for a non-existent user");
+        assertEquals("Invalid username or password.", result.get("message").getAsString(), "Message should indicate failure");
+
+        verify(userLoginDAO, times(1)).getPasswordDetailsByUsername("nonexistentuser");
+        verify(userDAO, never()).getUserDetails(anyInt());
+    }
+
+    /**
+     * Test case for a successful password change.
+     */
+    @Test
+    public void testChangePassword_Successful() {
+        // --- GIVEN ---
+        when(userLoginDAO.updatePassword(eq(TEST_USER_ID), anyString())).thenReturn(true);
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.changePassword(TEST_USER_ID, "newPassword123");
+
+        // --- THEN ---
+        assertTrue(result.get("success").getAsBoolean(), "Password change should be successful");
+        assertEquals("Password changed successfully.", result.get("message").getAsString(), "Message should indicate success");
+
+        verify(userLoginDAO, times(1)).updatePassword(eq(TEST_USER_ID), anyString());
+    }
+
+    /**
+     * Test case for a failed password change.
+     */
+    @Test
+    public void testChangePassword_Failed() {
+        // --- GIVEN ---
+        when(userLoginDAO.updatePassword(anyInt(), anyString())).thenReturn(false);
+
+        // --- WHEN ---
+        JsonObject result = userLoginService.changePassword(TEST_USER_ID, "newPassword123");
+
+        // --- THEN ---
+        assertFalse(result.get("success").getAsBoolean(), "Password change should fail");
+        assertEquals("Failed to change password. Please try again.", result.get("message").getAsString(), "Message should indicate failure");
+
+        verify(userLoginDAO, times(1)).updatePassword(anyInt(), anyString());
+    }
+
+    /**
+     * Test case to verify that the hashPassword method returns a valid hash.
+     * This is a simple test to ensure the hashing algorithm works as expected.
+     */
+    @Test
+    public void testHashPassword_ReturnsValidHash() {
+        // --- GIVEN ---
+        String password = "testPassword";
+
+        // --- WHEN ---
+        String hashedPassword = userLoginService.hashPassword(password);
+
+        // --- THEN ---
+        assertNotNull(hashedPassword, "Hashed password should not be null");
+        assertFalse(hashedPassword.isEmpty(), "Hashed password should not be empty");
+        // Re-hash to ensure consistency
+        assertEquals(userLoginService.hashPassword(password), hashedPassword, "Hashed password should be consistent");
+    }
+}
