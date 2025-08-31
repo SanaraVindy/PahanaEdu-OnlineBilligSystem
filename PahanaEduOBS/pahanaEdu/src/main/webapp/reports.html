@@ -1,539 +1,445 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>PahanaEdu - Reports</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Bootstrap & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Dashboard - PahanaEdu</title>
+    <!-- Bootstrap CSS for the provided navigation bar styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons for the icons in the navigation bar -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Tailwind CSS CDN for the rest of the dashboard styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for dynamic charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Data Labels plugin to show values on charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- jsPDF and html2canvas for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        /* Custom Tailwind configuration to match the provided color scheme */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pahana-dark-purple': '#6a1b9a',
+                        'pahana-medium-purple': '#ab47bc',
+                        'pahana-light-purple': '#ce93d8',
+                        'pahana-very-light-purple': '#e1bee7',
+                        'pahana-card-text': '#4a148c',
+                    },
+                    backgroundImage: {
+                        'header-gradient': 'linear-gradient(to right, #6a1b9a, #ab47bc)',
+                        'card-gradient': 'linear-gradient(to right, #ce93d8, #e1bee7)',
+                    }
+                }
+            }
+        }
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            background: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: #e1bee7; /* Using a solid color that matches the provided light purple */
         }
-
-        .container-box {
-            max-width: 1100px;
-            margin: 40px auto;
-            background: rgba(255, 255, 255, 0.94);
-            padding: 40px 30px;
-            border-radius: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-        }
-
-        .title-header {
-            background: linear-gradient(to right, #6a1b9a, #ab47bc);
-            color: white;
-            padding: 18px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
-
-        .form-control, .form-select {
-            border-radius: 12px;
-        }
-
-        .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 5px rgba(106, 27, 154, 0.5);
-            border-color: #6a1b9a;
-        }
-
-        .btn-purple {
-            background-color: #6a1b9a;
-            border: none;
-            color: white;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-purple:hover {
-            background-color: #4a148c;
-        }
-
-        .table thead {
-            background-color: #ab47bc;
-            color: white;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f3e5f5;
-        }
-
-        .export-btns .btn {
-            margin-right: 10px;
-        }
-
-        .report-label {
-            font-weight: 600;
-            color: #6a1b9a;
-        }
-
-        /* KPI Cards Styling */
-        .kpi-card {
-            background: #e1bee7;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-        }
-        
-        .kpi-card h5 {
-            color: #4a148c;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .kpi-card h2 {
-            color: #6a1b9a;
-            font-weight: 700;
-        }
-
-        /* Chart containers */
-        #chartsRow {
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .chart-container {
-            background: linear-gradient(to right, #ce93d8, #e1bee7);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(106, 27, 154, 0.2);
-        }
-
-        .chart-title {
-            color: #4a148c;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        /* Live filter input styling */
-        #liveFilterInput {
-            max-width: 300px;
-            margin-bottom: 15px;
-            border-radius: 12px;
-            border: 1.5px solid #6a1b9a;
-            padding: 8px 12px;
-            font-size: 1rem;
-            outline: none;
-            transition: box-shadow 0.3s ease;
-        }
-
-        #liveFilterInput:focus {
-            box-shadow: 0 0 8px rgba(106, 27, 154, 0.7);
-            border-color: #4a148c;
-        }
-        
-        /* Loading spinner */
-        .spinner-container {
-            display: none; /* Initially hidden */
-            justify-content: center;
-            align-items: center;
-            min-height: 200px;
-        }
-        
-        .hidden {
-            display: none;
+        /* Class for the gradient text effect on the title */
+        .text-header-gradient {
+            background-image: linear-gradient(to right, #ce93d8, #4a148c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent; /* Fallback for browsers that don't support text-fill-color */
         }
     </style>
 </head>
-<body>
-<!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(to right, #6a1b9a, #8e24aa); padding: 10px 30px;">
-    <div class="container-fluid">
-        <a class="navbar-brand me-3" href="#" onclick="history.back()">
-            <i class="bi bi-arrow-left-circle-fill"></i>
-        </a>
+<body class="text-gray-900 min-h-screen">
+    
+    <!-- Navigation Bar (Provided by the user) -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(to right, #6a1b9a, #8e24aa); padding: 10px 30px;">
+        <div class="container-fluid">
+            <a class="navbar-brand me-3" href="#" onclick="history.back()">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+            </a>
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="bi bi-house-door-fill"></i> PahanaEdu
+            </a>
 
-        <a class="navbar-brand fw-bold" href="#">
-            <i class="bi bi-house-door-fill"></i> PahanaEdu
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse justify-content-between" id="navbarContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                            </ul>
-
-            <div class="d-flex">
-                <a href="logout.html" class="btn btn-light text-dark fw-semibold rounded-pill">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<script>
-    // Assuming the user's role is stored somewhere, e.g., in a session variable or a JavaScript variable.
-    // For this example, let's pretend we have a variable `userRole`.
-    // You would replace this with how you actually get the user's role.
-    const userRole = 1; // Change this to 2 to test the other case.
-
-    const dashboardLink = document.getElementById('dashboard-link');
-
-    if (dashboardLink) {
-        if (userRole === 1) {
-            dashboardLink.href = 'admin-dashboard.html';
-            dashboardLink.innerHTML = '<i class="bi bi-speedometer2"></i> Admin Dashboard';
-        } else if (userRole === 2) {
-            dashboardLink.href = 'dashboard.html';
-            dashboardLink.innerHTML = '<i class="bi bi-speedometer2"></i> Dashboard';
-        }
-    }
-</script>
-
-<div class="container-box">
-    <div class="title-header">
-        📊 Reports Dashboard - PahanaEdu
-    </div>
-
-    <!-- Advanced Filter Form -->
-    <div class="row g-3 mb-3 align-items-end">
-        <!-- Report Type Selector -->
-        <div class="col-md-3">
-            <label class="report-label" for="reportType">Report Type</label>
-            <select id="reportType" name="reportType" class="form-select">
-                <option value="topcustomers">Top Customers</option>
-                <option value="monthly-sales-summary">Monthly Sales Summary</option>
-            </select>
-        </div>
-
-        <!-- Date Inputs (for Top Customers) -->
-        <div id="dateInputs" class="col-md-6">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="report-label" for="fromDate">From Date</label>
-                    <input type="date" id="fromDate" name="fromDate" class="form-control" value="2024-01-01" />
-                </div>
-                <div class="col-md-6">
-                    <label class="report-label" for="toDate">To Date</label>
-                    <input type="date" id="toDate" name="toDate" class="form-control" value="2024-12-31" />
-                </div>
-            </div>
-        </div>
-
-        <!-- Year Input (for Monthly Sales Summary) -->
-        <div id="yearInput" class="col-md-6 hidden">
-            <label class="report-label" for="year">Year</label>
-            <input type="number" id="year" name="year" class="form-control" value="2024" min="2000" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="report-label" for="customerLimit">Limit</label>
-            <input type="number" id="customerLimit" name="customerLimit" class="form-control" value="10" min="1" />
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button id="generateReportBtn" type="button" class="btn btn-purple w-100">
-                <i class="bi bi-bar-chart-fill"></i> Generate Report
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </div>
-    </div>
 
-    <!-- KPI Cards Row -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="kpi-card">
-                <h5>Total Sales</h5>
-                <h2 id="totalSalesKPI">LKR 0.00</h2>
+            <div class="collapse navbar-collapse justify-content-between" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="dashboard.html">
+                            <i class="bi bi-house-fill"></i> Home
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="d-flex">
+                    <a href="logout.html" class="btn btn-light text-dark fw-semibold rounded-pill">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="kpi-card">
-                <h5>Total Orders</h5>
-                <h2 id="totalOrdersKPI">0</h2>
+    </nav>
+
+    <!-- Main Container for Dashboard -->
+    <div class="max-w-7xl mx-auto bg-white/95 rounded-3xl shadow-2xl p-6 md:p-10 my-8 transition-all duration-300">
+
+        <!-- Header -->
+        <header class="bg-header-gradient text-center py-6 px-4 rounded-2xl shadow-lg mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold flex items-center justify-center space-x-3 text-header-gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Reports Dashboard</span>
+            </h1>
+        </header>
+
+        <!-- Report Filter Section -->
+        <section class="bg-gray-200 p-6 rounded-2xl shadow-inner mb-8">
+            <h2 class="text-2xl font-semibold text-pahana-dark-purple mb-4">Report Filters</h2>
+            <form id="reportForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <!-- Date Filter Inputs -->
+                <div class="col-span-1">
+                    <label for="fromDate" class="block text-sm font-medium text-gray-600">From Date</label>
+                    <input type="date" id="fromDate" name="fromDate" required class="mt-1 block w-full rounded-md border-gray-400 bg-white text-gray-900 shadow-sm focus:border-pahana-dark-purple focus:ring-pahana-dark-purple sm:text-sm p-2">
+                </div>
+                <div class="col-span-1">
+                    <label for="toDate" class="block text-sm font-medium text-gray-600">To Date</label>
+                    <input type="date" id="toDate" name="toDate" required class="mt-1 block w-full rounded-md border-gray-400 bg-white text-gray-900 shadow-sm focus:border-pahana-dark-purple focus:ring-pahana-dark-purple sm:text-sm p-2">
+                </div>
+                <div class="col-span-1">
+                    <label for="limit" class="block text-sm font-medium text-gray-600">Customer Limit</label>
+                    <input type="number" id="limit" name="limit" value="10" min="1" class="mt-1 block w-full rounded-md border-gray-400 bg-white text-gray-900 shadow-sm focus:border-pahana-dark-purple focus:ring-pahana-dark-purple sm:text-sm p-2">
+                </div>
+            </form>
+            <!-- Download Buttons -->
+            <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-4">
+                <button id="downloadPdfBtn" class="w-full md:w-1/2 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                    Download as PDF
+                </button>
+                <button id="downloadExcelBtn" class="w-full md:w-1/2 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                    Download as Excel
+                </button>
             </div>
+        </section>
+        
+        <!-- Loading and Error State -->
+        <div id="loading" class="text-center text-lg text-pahana-dark-purple font-semibold hidden">
+            <div class="animate-spin inline-block h-8 w-8 border-4 border-pahana-dark-purple border-t-transparent rounded-full mr-2"></div>
+            <span>Loading report data...</span>
         </div>
-        <div class="col-md-4">
-            <div class="kpi-card">
-                <h5>Avg. Order Value</h5>
-                <h2 id="avgOrderValueKPI">LKR 0.00</h2>
-            </div>
+        <div id="error-message" class="bg-red-200 border-l-4 border-red-500 text-red-700 p-4 rounded-md hidden" role="alert">
+            <p class="font-bold">Error!</p>
+            <p id="error-text"></p>
         </div>
-    </div>
 
-    <!-- Live text filter -->
-    <input
-        type="text"
-        id="liveFilterInput"
-        placeholder="Live Filter: Search in reports..."
-        title="Type to filter the reports table"
-    />
-
-    <!-- Export Buttons -->
-    <div class="export-btns text-end mb-3">
-        <button id="exportCsvBtn" type="button" class="btn btn-outline-info">
-            <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export CSV
-        </button>
-        <button type="button" class="btn btn-outline-success">
-            <i class="bi bi-file-earmark-excel-fill"></i> Export Excel
-        </button>
-        <button type="button" class="btn btn-outline-danger">
-            <i class="bi bi-file-pdf-fill"></i> Export PDF
-        </button>
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="hidden">
+            <!-- Summary Cards Section -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Total Sales Card -->
+                <div class="bg-card-gradient text-pahana-card-text rounded-2xl p-6 shadow-xl text-center">
+                    <h3 class="text-xl font-medium opacity-80 mb-2">Total Sales (LKR)</h3>
+                    <p id="totalSales" class="text-4xl font-bold">LKR 0.00</p>
+                </div>
+                <!-- Total Orders Card -->
+                <div class="bg-card-gradient text-pahana-card-text rounded-2xl p-6 shadow-xl text-center">
+                    <h3 class="text-xl font-medium opacity-80 mb-2">Total Orders</h3>
+                    <p id="totalOrders" class="text-4xl font-bold">0</p>
+                </div>
+                <!-- Average Order Value Card -->
+                <div class="bg-card-gradient text-pahana-card-text rounded-2xl p-6 shadow-xl text-center">
+                    <h3 class="text-xl font-medium opacity-80 mb-2">Avg. Order Value (LKR)</h3>
+                    <p id="avgOrderValue" class="text-4xl font-bold">LKR 0.00</p>
+                </div>
+            </section>
+        
+            <!-- Charts Section -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Top Customers by Total Spending Chart -->
+                <div class="bg-gray-200 p-6 rounded-2xl shadow-lg flex flex-col items-center">
+                    <h3 class="text-xl font-semibold text-pahana-dark-purple mb-4">Top Customers by Total Spending</h3>
+                    <div class="w-full h-80">
+                        <canvas id="totalSpendingChart"></canvas>
+                    </div>
+                </div>
+                <!-- Distribution of Top Categories Chart -->
+                <div class="bg-gray-200 p-6 rounded-2xl shadow-lg flex flex-col items-center">
+                    <h3 class="text-xl font-semibold text-pahana-dark-purple mb-4">Distribution of Top Categories</h3>
+                    <div class="w-full h-80">
+                        <canvas id="topCategoriesChart"></canvas>
+                    </div>
+                </div>
+                <!-- Top Customers by Loyalty Points Chart -->
+                <div class="bg-gray-200 p-6 rounded-2xl shadow-lg flex flex-col items-center col-span-full md:col-span-1">
+                    <h3 class="text-xl font-semibold text-pahana-dark-purple mb-4">Top Customers by Loyalty Points</h3>
+                    <div class="w-full h-80">
+                        <canvas id="loyaltyPointsChart"></canvas>
+                    </div>
+                </div>
+                <!-- Monthly Sales Trend Chart -->
+                <div class="bg-gray-200 p-6 rounded-2xl shadow-lg flex flex-col items-center col-span-full md:col-span-1">
+                    <h3 class="text-xl font-semibold text-pahana-dark-purple mb-4">Monthly Sales Trend</h3>
+                    <div class="w-full h-80">
+                        <canvas id="monthlySalesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        
+            <!-- Top Customers Table Section -->
+            <section class="bg-gray-200 p-6 rounded-2xl shadow-lg overflow-x-auto">
+                <h3 class="text-xl font-semibold text-pahana-dark-purple mb-4">Top Customers Details</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-300">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider rounded-tl-xl">Rank</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Customer Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Orders</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Spent (LKR)</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Loyalty Points</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider rounded-tr-xl">Top Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody" class="bg-white divide-y divide-gray-300 text-gray-800">
+                            <!-- Table rows will be inserted here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
     </div>
     
-    <!-- Loading spinner -->
-    <div id="loadingSpinner" class="text-center spinner-container">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <span class="ms-2">Generating your report...</span>
-    </div>
+    <!-- Bootstrap JS for navbar functionality (toggler) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Register the datalabels plugin globally. This is required for Chart.js.
+        Chart.register(ChartDataLabels);
 
-    <!-- Charts Row -->
-    <div id="chartsRow" class="row g-4">
-        <!-- Chart Container will be dynamically added/removed -->
-    </div>
+        // Define API endpoints
+        const API_BASE_URL = "http://localhost:8080/OBS_PahanaEdu_BE/api/reports";
+        const TOTAL_SALES_ENDPOINT = `${API_BASE_URL}/top-customers`;
+        const MONTHLY_SALES_ENDPOINT = `${API_BASE_URL}/monthly-sales-summary`;
 
-    <!-- Reports Table -->
-    <div class="table-responsive">
-        <table id="reportsTable" class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <!-- Dynamic headers will be inserted here -->
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dynamic content will be inserted here -->
-            </tbody>
-        </table>
-    </div>
-</div>
+        // Get DOM elements for manipulation
+        const fromDateInput = document.getElementById('fromDate');
+        const toDateInput = document.getElementById('toDate');
+        const limitInput = document.getElementById('limit');
+        const loadingSpinner = document.getElementById('loading');
+        const errorMessageDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
-<script>
-    // Initializing Chart.js instances as global variables
-    let currentCharts = {}; // Stores all chart instances
-    
-    // NOTE: The original code attempted to fetch data from a 'localhost' URL.
-    // This is not possible in this hosted environment due to security restrictions.
-    // To make the dashboard functional, the fetch function has been replaced
-    // with a mock implementation that returns hardcoded JSON data after a delay.
-    // For a production app, you would replace this with a call to your live server.
+        // Chart instances
+        let totalSpendingChart, topCategoriesChart, loyaltyPointsChart, monthlySalesChart;
 
-    // Helper function to show/hide input fields based on selected report type
-    function updateInputFields() {
-        const reportType = document.getElementById('reportType').value;
-        const dateInputs = document.getElementById('dateInputs');
-        const yearInput = document.getElementById('yearInput');
-        const customerLimitInput = document.getElementById('customerLimit');
-
-        if (reportType === 'topcustomers') {
-            dateInputs.classList.remove('hidden');
-            yearInput.classList.add('hidden');
-            customerLimitInput.disabled = false;
-        } else if (reportType === 'monthly-sales-summary') {
-            dateInputs.classList.add('hidden');
-            yearInput.classList.remove('hidden');
-            customerLimitInput.disabled = true; // Not needed for this report
-        }
-    }
-    
-    // Asynchronously fetches report data from a mock data source.
-    async function fetchReportData(reportType, params) {
-        // Simulate a network delay
-        await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-        const mockData = {
-            'topcustomers': [
-                { rank: 1, firstName: 'Nimal', lastName: 'Perera', email: 'nimal.p@email.com', totalOrders: 15, totalSpent: 15450.75, loyaltyPoints: 300, topCategory: 'Science Books' },
-                { rank: 2, firstName: 'Kamala', lastName: 'Silva', email: 'kamala.s@email.com', totalOrders: 12, totalSpent: 12100.20, loyaltyPoints: 250, topCategory: 'History' },
-                { rank: 3, firstName: 'Sunil', lastName: 'Bandara', email: 'sunil.b@email.com', totalOrders: 10, totalSpent: 10890.00, loyaltyPoints: 220, topCategory: 'Math' },
-                { rank: 4, firstName: 'Aisha', lastName: 'Khan', email: 'aisha.k@email.com', totalOrders: 8, totalSpent: 9550.50, loyaltyPoints: 180, topCategory: 'Science Books' },
-                { rank: 5, firstName: 'Priya', lastName: 'Fernando', email: 'priya.f@email.com', totalOrders: 7, totalSpent: 7800.00, loyaltyPoints: 150, topCategory: 'Fiction' },
-                { rank: 6, firstName: 'Tharindu', lastName: 'Jayawardena', email: 'tharindu.j@email.com', totalOrders: 6, totalSpent: 6200.00, loyaltyPoints: 120, topCategory: 'History' },
-                { rank: 7, firstName: 'Lakshmi', lastName: 'De Silva', email: 'lakshmi.d@email.com', totalOrders: 5, totalSpent: 5900.00, loyaltyPoints: 100, topCategory: 'Science Books' },
-                { rank: 8, firstName: 'Chamara', lastName: 'Gamage', email: 'chamara.g@email.com', totalOrders: 4, totalSpent: 4500.00, loyaltyPoints: 90, topCategory: 'Math' },
-                { rank: 9, firstName: 'Saman', lastName: 'Sirisena', email: 'saman.s@email.com', totalOrders: 4, totalSpent: 3800.00, loyaltyPoints: 80, topCategory: 'Fiction' },
-                { rank: 10, firstName: 'Anusha', lastName: 'Perera', email: 'anusha.p@email.com', totalOrders: 3, totalSpent: 3100.00, loyaltyPoints: 60, topCategory: 'History' }
-            ],
-            'monthly-sales-summary': [
-                { month: 'January', totalSales: 120000, numberOfTransactions: 150 },
-                { month: 'February', totalSales: 145000, numberOfTransactions: 180 },
-                { month: 'March', totalSales: 130000, numberOfTransactions: 165 },
-                { month: 'April', totalSales: 160000, numberOfTransactions: 200 },
-                { month: 'May', totalSales: 185000, numberOfTransactions: 215 },
-                { month: 'June', totalSales: 170000, numberOfTransactions: 195 },
-                { month: 'July', totalSales: 200000, numberOfTransactions: 230 },
-                { month: 'August', totalSales: 190000, numberOfTransactions: 210 },
-                { month: 'September', totalSales: 210000, numberOfTransactions: 240 },
-                { month: 'October', totalSales: 225000, numberOfTransactions: 255 },
-                { month: 'November', totalSales: 240000, numberOfTransactions: 270 },
-                { month: 'December', totalSales: 260000, numberOfTransactions: 300 }
-            ]
-        };
-
-        const data = mockData[reportType] || [];
-        // Apply limit if specified
-        if (params.limit) {
-            return data.slice(0, params.limit);
-        }
-        return data;
-    }
-
-    // Function to populate the reports table with data
-    function populateReportsTable(reportType, data) {
-        const tableHeader = document.getElementById('reportsTable').getElementsByTagName('thead')[0];
-        const tableBody = document.getElementById('reportsTable').getElementsByTagName('tbody')[0];
-        tableHeader.innerHTML = ''; // Clear existing headers
-        tableBody.innerHTML = ''; // Clear existing data
-
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No data found for the selected period.</td></tr>';
-            return;
+        /**
+         * Hides the dashboard content and displays a loading message.
+         */
+        function showLoading() {
+            dashboardContent.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
         }
 
-        // Set dynamic headers and content based on report type
-        if (reportType === 'topcustomers') {
-            const headers = ['Rank', 'Customer Name', 'Email', 'Total Orders', 'Total Spent (LKR)', 'Loyalty Points', 'Top Category'];
-            tableHeader.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
-            data.forEach(customer => {
-                const row = tableBody.insertRow();
-                row.innerHTML = `
-                    <td>${customer.rank}</td>
-                    <td>${customer.firstName} ${customer.lastName}</td>
-                    <td>${customer.email}</td>
-                    <td>${customer.totalOrders}</td>
-                    <td>LKR ${customer.totalSpent.toFixed(2)}</td>
-                    <td>${customer.loyaltyPoints}</td>
-                    <td>${customer.topCategory}</td>
-                `;
+        /**
+         * Hides the loading message and displays an error message.
+         * @param {string} message The error message to display.
+         */
+        function showError(message) {
+            loadingSpinner.classList.add('hidden');
+            dashboardContent.classList.add('hidden');
+            errorMessageDiv.classList.remove('hidden');
+            errorText.textContent = message;
+        }
+
+        /**
+         * Hides the loading and error messages and displays the dashboard content.
+         */
+        function showContent() {
+            loadingSpinner.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+            dashboardContent.classList.remove('hidden');
+        }
+
+        /**
+         * Fetches all report data from the API endpoints.
+         * @returns {Promise<Object>} A promise that resolves to an object containing all report data.
+         */
+        async function fetchAllReportData() {
+            const fromDate = fromDateInput.value;
+            const toDate = toDateInput.value;
+            const limit = limitInput.value;
+
+            if (!fromDate || !toDate || !limit) {
+                showError("Please fill in all required fields to see the report.");
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Fetch top customers report
+                const topCustomersUrl = new URL(TOTAL_SALES_ENDPOINT);
+                topCustomersUrl.searchParams.append('fromDate', fromDate);
+                topCustomersUrl.searchParams.append('toDate', toDate);
+                topCustomersUrl.searchParams.append('limit', limit);
+                const topCustomersRes = await fetch(topCustomersUrl);
+                const topCustomersData = await topCustomersRes.json();
+                if (!topCustomersRes.ok) throw new Error(topCustomersData.message || 'Failed to fetch top customers data.');
+
+                // Fetch monthly sales summary
+                const monthlySalesUrl = new URL(MONTHLY_SALES_ENDPOINT);
+                monthlySalesUrl.searchParams.append('year', new Date(fromDate).getFullYear());
+                const monthlySalesRes = await fetch(monthlySalesUrl);
+                const monthlySalesData = await monthlySalesRes.json();
+                if (!monthlySalesRes.ok) throw new Error(monthlySalesData.message || 'Failed to fetch monthly sales data.');
+
+                showContent();
+                return { topCustomersData, monthlySalesData };
+
+            } catch (error) {
+                console.error('API fetch error:', error);
+                showError(`Error fetching data: ${error.message}`);
+                return null;
+            }
+        }
+
+        /**
+         * Updates the summary cards with calculated data.
+         * @param {Array<Object>} customers The top customers data array.
+         */
+        function updateSummaryCards(customers) {
+            let totalSales = 0;
+            let totalOrders = 0;
+
+            customers.forEach(cust => {
+                totalSales += cust.totalSpent;
+                totalOrders += cust.totalOrders;
             });
-        } else if (reportType === 'monthly-sales-summary') {
-            const headers = ['Month', 'Total Sales (LKR)', 'Number of Transactions'];
-            tableHeader.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
-            data.forEach(summary => {
-                const row = tableBody.insertRow();
-                row.innerHTML = `
-                    <td>${summary.month}</td>
-                    <td>LKR ${summary.totalSales.toFixed(2)}</td>
-                    <td>${summary.numberOfTransactions}</td>
-                `;
-            });
-        }
-    }
 
-    // Function to update the charts with new data
-    function updateCharts(reportType, data) {
-        // Destroy existing charts
-        for (const key in currentCharts) {
-            currentCharts[key].destroy();
-        }
-        currentCharts = {};
-        document.getElementById('chartsRow').innerHTML = ''; // Clear old chart containers
+            const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-        if (data.length === 0) {
-            return;
+            document.getElementById('totalSales').textContent = `LKR ${totalSales.toFixed(2)}`;
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('avgOrderValue').textContent = `LKR ${avgOrderValue.toFixed(2)}`;
         }
 
-        if (reportType === 'topcustomers') {
-            const customerNames = data.map(c => `${c.firstName} ${c.lastName}`);
-            const totalSpent = data.map(c => c.totalSpent);
-            const loyaltyPoints = data.map(c => c.loyaltyPoints);
-            const categoryCounts = data.reduce((acc, customer) => {
-                acc[customer.topCategory] = (acc[customer.topCategory] || 0) + 1;
-                return acc;
-            }, {});
-            const categoryLabels = Object.keys(categoryCounts);
-            const categoryData = Object.values(categoryCounts);
-            const categoryColors = ['#6a1b9a', '#ab47bc', '#ce93d8', '#e1bee7', '#9c27b0', '#ba68c8'];
-            
-            // Re-create chart containers
-            document.getElementById('chartsRow').innerHTML = `
-                <div class="col-md-4 chart-container">
-                    <div class="chart-title">Top Customers by Total Spending</div>
-                    <canvas id="totalSpentChart"></canvas>
-                </div>
-                <div class="col-md-4 chart-container">
-                    <div class="chart-title">Distribution of Top Categories</div>
-                    <canvas id="topCategoriesChart"></canvas>
-                </div>
-                <div class="col-md-4 chart-container">
-                    <div class="chart-title">Top Customers by Loyalty Points</div>
-                    <canvas id="loyaltyPointsChart"></canvas>
-                </div>
-            `;
-            
-            // Bar Chart for Total Spending
-            const totalSpentCtx = document.getElementById('totalSpentChart').getContext('2d');
-            currentCharts.totalSpent = new Chart(totalSpentCtx, {
+        /**
+         * Renders the charts using the fetched data.
+         * @param {Array<Object>} customers The top customers data array.
+         * @param {Array<Object>} monthlySales The monthly sales summary data array.
+         */
+        function renderCharts(customers, monthlySales) {
+            // Destroy existing chart instances to prevent duplicates
+            if (totalSpendingChart) totalSpendingChart.destroy();
+            if (topCategoriesChart) topCategoriesChart.destroy();
+            if (loyaltyPointsChart) loyaltyPointsChart.destroy();
+            if (monthlySalesChart) monthlySalesChart.destroy();
+
+            const customerNames = customers.map(c => `${c.firstName} ${c.lastName || ''}`);
+            const totalSpent = customers.map(c => c.totalSpent);
+            const loyaltyPoints = customers.map(c => c.loyaltyPoints);
+
+            // Chart 1: Top Customers by Total Spending
+            const totalSpendingCtx = document.getElementById('totalSpendingChart').getContext('2d');
+            totalSpendingChart = new Chart(totalSpendingCtx, {
                 type: 'bar',
                 data: {
                     labels: customerNames,
                     datasets: [{
                         label: 'Total Spent (LKR)',
                         data: totalSpent,
-                        backgroundColor: '#6a1b9a',
+                        backgroundColor: '#6a1b9a', // A bright purple
+                        borderColor: '#ab47bc',
+                        borderWidth: 1,
                         borderRadius: 5,
-                        barPercentage: 0.6,
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
+                        },
+                        x: { 
+                            display: false,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
+                        }
+                    },
                     plugins: {
                         legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: val => `LKR ${val}` }
+                        title: { display: true, text: 'Top Customers by Total Spending', color: '#4a148c' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#4a148c',
+                            formatter: (value) => `LKR ${value.toFixed(2)}`
+                        }
+                    }
+                }
+            });
+
+            // Process data for Chart 2: Top Categories
+            const categoryMap = customers.reduce((acc, curr) => {
+                const category = curr.topCategory || 'Other';
+                acc[category] = (acc[category] || 0) + 1;
+                return acc;
+            }, {});
+            const categoryLabels = Object.keys(categoryMap);
+            const categoryData = Object.values(categoryMap);
+
+            const topCategoriesCtx = document.getElementById('topCategoriesChart').getContext('2d');
+            topCategoriesChart = new Chart(topCategoriesCtx, {
+                type: 'pie',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        label: 'Top Categories',
+                        data: categoryData,
+                        backgroundColor: [
+                            '#6a1b9a', '#ab47bc', '#ce93d8', '#e1bee7', '#4a148c'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: { color: '#4a148c' }
                         },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
+                        title: { display: true, text: 'Distribution of Top Categories', color: '#4a148c' },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, context) => {
+                                const total = context.chart.data.datasets[0].data.reduce((sum, v) => sum + v, 0);
+                                const percentage = (value / total * 100).toFixed(1) + '%';
+                                return percentage;
                             }
                         }
                     }
                 }
             });
 
-            // Pie Chart for Top Categories
-            const topCategoriesCtx = document.getElementById('topCategoriesChart').getContext('2d');
-            currentCharts.topCategories = new Chart(topCategoriesCtx, {
-                type: 'pie',
-                data: {
-                    labels: categoryLabels,
-                    datasets: [{
-                        data: categoryData,
-                        backgroundColor: categoryColors.slice(0, categoryLabels.length),
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-
-            // Bar Chart for Loyalty Points
+            // Chart 3: Top Customers by Loyalty Points
             const loyaltyPointsCtx = document.getElementById('loyaltyPointsChart').getContext('2d');
-            currentCharts.loyaltyPoints = new Chart(loyaltyPointsCtx, {
+            loyaltyPointsChart = new Chart(loyaltyPointsCtx, {
                 type: 'bar',
                 data: {
                     labels: customerNames,
@@ -541,277 +447,221 @@
                         label: 'Loyalty Points',
                         data: loyaltyPoints,
                         backgroundColor: '#ab47bc',
-                        borderRadius: 5,
-                        barPercentage: 0.6,
+                        borderColor: '#ce93d8',
+                        borderWidth: 1,
+                        borderRadius: 5
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
+                    maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
-                        }
-                    }
-                }
-            });
-
-        } else if (reportType === 'monthly-sales-summary') {
-            const months = data.map(s => s.month);
-            const totalSales = data.map(s => s.totalSales);
-            const numberOfTransactions = data.map(s => s.numberOfTransactions);
-            
-            document.getElementById('chartsRow').innerHTML = `
-                <div class="col-md-6 chart-container">
-                    <div class="chart-title">Total Sales per Month</div>
-                    <canvas id="monthlySalesChart"></canvas>
-                </div>
-                <div class="col-md-6 chart-container">
-                    <div class="chart-title">Number of Transactions per Month</div>
-                    <canvas id="monthlyTransactionsChart"></canvas>
-                </div>
-            `;
-
-            // Bar Chart for Monthly Sales
-            const monthlySalesCtx = document.getElementById('monthlySalesChart').getContext('2d');
-            currentCharts.monthlySales = new Chart(monthlySalesCtx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Total Sales (LKR)',
-                        data: totalSales,
-                        backgroundColor: '#6a1b9a',
-                        borderRadius: 5,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: {
+                        y: { 
                             beginAtZero: true,
-                            ticks: { callback: val => `LKR ${val}` }
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
                         },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
+                        x: { 
+                            display: false,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Top Customers by Loyalty Points', color: '#4a148c' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#4a148c',
+                            formatter: (value) => value
                         }
                     }
                 }
             });
 
-            // Line Chart for Monthly Transactions
-            const monthlyTransactionsCtx = document.getElementById('monthlyTransactionsChart').getContext('2d');
-            currentCharts.monthlyTransactions = new Chart(monthlyTransactionsCtx, {
+            // Process data for Chart 4: Monthly Sales Trend
+            const monthlyLabels = monthlySales.map(item => item.month);
+            const monthlyData = monthlySales.map(item => item.totalSales);
+
+            const monthlySalesCtx = document.getElementById('monthlySalesChart').getContext('2d');
+            monthlySalesChart = new Chart(monthlySalesCtx, {
                 type: 'line',
                 data: {
-                    labels: months,
+                    labels: monthlyLabels,
                     datasets: [{
-                        label: 'Number of Transactions',
-                        data: numberOfTransactions,
-                        backgroundColor: 'rgba(171, 71, 188, 0.5)',
-                        borderColor: '#ab47bc',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
+                        label: 'Total Sales (LKR)',
+                        data: monthlyData,
+                        fill: false,
+                        borderColor: '#6a1b9a',
+                        tension: 0.1,
+                        pointBackgroundColor: '#ab47bc',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
+                        },
+                        x: { 
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: { color: '#4a148c' }
+                        }
+                    },
                     plugins: {
                         legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true },
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 45
-                            }
+                        title: { display: true, text: 'Monthly Sales Trend', color: '#4a148c' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#4a148c',
+                            formatter: (value) => `LKR ${value.toFixed(0)}`
                         }
                     }
                 }
             });
         }
-    }
 
-    // Function to update the KPI cards
-    function updateKPIs(reportType, data) {
-        if (reportType === 'topcustomers') {
-            const totalSales = data.reduce((sum, customer) => sum + customer.totalSpent, 0);
-            const totalOrders = data.reduce((sum, customer) => sum + customer.totalOrders, 0);
-            const avgOrderValue = totalSales / (totalOrders > 0 ? totalOrders : 1);
-            document.getElementById('totalSalesKPI').innerText = `LKR ${totalSales.toFixed(2)}`;
-            document.getElementById('totalOrdersKPI').innerText = totalOrders.toString();
-            document.getElementById('avgOrderValueKPI').innerText = `LKR ${avgOrderValue.toFixed(2)}`;
-        } else if (reportType === 'monthly-sales-summary') {
-            const totalSales = data.reduce((sum, summary) => sum + summary.totalSales, 0);
-            const totalOrders = data.reduce((sum, summary) => sum + summary.numberOfTransactions, 0);
-            const avgSalesPerMonth = totalSales / (data.length > 0 ? data.length : 1);
-            document.getElementById('totalSalesKPI').innerText = `LKR ${totalSales.toFixed(2)}`;
-            document.getElementById('totalOrdersKPI').innerText = totalOrders.toString();
-            document.getElementById('avgOrderValueKPI').innerText = `LKR ${avgSalesPerMonth.toFixed(2)} (Per Month)`;
-        }
-    }
-
-
-    /**
-     * Converts the current table data to a CSV and triggers a download.
-     */
-    function exportTableToCSV() {
-        // Get the reports table
-        const table = document.getElementById('reportsTable');
-        if (!table) return;
-
-        // Get the header cells
-        const headers = Array.from(table.querySelectorAll('thead th')).map(header => {
-            let text = header.innerText.trim();
-            // Clean up the header text for the CSV
-            text = text.replace('(LKR)', '').replace('Rank', '').trim();
-            return text;
-        }).filter(Boolean); // Remove empty strings
-
-        // Get all visible rows from the tbody
-        const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-
-        // Check if there are rows to export
-        if (rows.length === 0) {
-            console.warn('No data to export.');
-            return;
-        }
-
-        // Map the rows to a CSV format
-        const csvContent = [
-            headers.join(','), // CSV header line
-            ...rows.map(row => {
-                const cells = Array.from(row.querySelectorAll('td'));
-                return cells.map(cell => {
-                    // Extract text, clean up the 'LKR ' prefix, and handle commas
-                    let text = cell.innerText.replace(/LKR /g, '').trim();
-                    if (text.includes(',')) {
-                        text = `"${text}"`; // Quote the text if it contains a comma
-                    }
-                    return text;
-                }).join(',');
-            })
-        ].join('\n');
-
-        // Create a Blob from the CSV string
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-
-        // Create a temporary link element to trigger the download
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'PahanaEdu_Report.csv');
-        link.style.display = 'none'; // Hide the link
-        document.body.appendChild(link);
-
-        // Simulate a click to download the file
-        link.click();
-
-        // Clean up by removing the link and revoking the object URL
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    // Function to handle the generation of the report
-    async function generateReport() {
-        // Show loading spinner
-        document.getElementById('loadingSpinner').style.display = 'flex';
-        // Clear previous error messages
-        document.getElementById('reportsTable').getElementsByTagName('tbody')[0].innerHTML = '';
-
-        const reportType = document.getElementById('reportType').value;
-        const params = {};
-        
-        // Collect parameters based on report type
-        if (reportType === 'topcustomers') {
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            const customerLimit = parseInt(document.getElementById('customerLimit').value, 10);
-            
-            if (!fromDate || !toDate || isNaN(customerLimit) || customerLimit < 1) {
-                displayErrorMessage('Please enter valid dates and a number for the limit.');
-                document.getElementById('loadingSpinner').style.display = 'none';
+        /**
+         * Populates the customer table with data.
+         * @param {Array<Object>} customers The top customers data array.
+         */
+        function populateCustomerTable(customers) {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No customers found for the selected criteria.</td></tr>';
                 return;
             }
-            params.startDate = fromDate;
-            params.endDate = toDate;
-            params.limit = customerLimit;
-        } else if (reportType === 'monthly-sales-summary') {
-            const year = document.getElementById('year').value;
-            
-            if (!year || isNaN(year)) {
-                displayErrorMessage('Please enter a valid year.');
-                document.getElementById('loadingSpinner').style.display = 'none';
-                return;
+
+            customers.forEach((cust, index) => {
+                const row = `
+                    <tr class="hover:bg-gray-200 transition-colors duration-100">
+                        <td class="px-6 py-4 whitespace-nowrap">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${cust.firstName} ${cust.lastName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${cust.email || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${cust.totalOrders}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">LKR ${cust.totalSpent.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${cust.loyaltyPoints}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${cust.topCategory || '-'}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        /**
+         * The main function to run the report generation logic.
+         */
+        async function runReport() {
+            const data = await fetchAllReportData();
+            if (data) {
+                updateSummaryCards(data.topCustomersData);
+                renderCharts(data.topCustomersData, data.monthlySalesData);
+                populateCustomerTable(data.topCustomersData);
             }
-            params.year = year;
+        }
+
+        /**
+         * Generates a PDF of the entire dashboard content.
+         */
+        function generateReportPdf() {
+            const element = document.getElementById('dashboardContent');
+            if (!element || element.classList.contains('hidden')) {
+                 showError('Please select dates to generate a report first before attempting to download.');
+                 return;
+            }
+
+            const loader = document.createElement('div');
+            loader.innerHTML = '<div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50"><div class="animate-spin inline-block h-12 w-12 border-4 border-pahana-dark-purple border-t-transparent rounded-full mr-2"></div><span class="text-white text-lg font-semibold">Generating PDF...</span></div>';
+            document.body.appendChild(loader);
+
+            html2canvas(element, {
+                scale: 2, // Improves quality of the generated image
+                useCORS: true, // This is important if you have images from other domains
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; 
+                const pageHeight = 295;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                pdf.save('PahanaEdu_Report.pdf');
+                document.body.removeChild(loader);
+            }).catch(error => {
+                document.body.removeChild(loader);
+                showError('Failed to generate PDF. Please try again.');
+                console.error('PDF generation error:', error);
+            });
         }
         
-        try {
-            const reportData = await fetchReportData(reportType, params);
-            populateReportsTable(reportType, reportData);
-            updateKPIs(reportType, reportData);
-            updateCharts(reportType, reportData);
-        } catch (error) {
-            console.error('Failed to generate report:', error);
-            let errorMessage = `An error occurred while generating the report. Error: ${error.message}`;
-            displayErrorMessage(errorMessage);
-        } finally {
-            // Hide loading spinner
-            document.getElementById('loadingSpinner').style.display = 'none';
+        /**
+         * Generates a CSV file from the customer table and downloads it.
+         */
+        function generateReportExcel() {
+             const table = document.getElementById('customerTableBody');
+             if (!table || table.children.length === 0 || (table.children.length === 1 && table.children[0].textContent.includes("No customers found"))) {
+                 showError('Please generate a report with data first before attempting to download as Excel.');
+                 return;
+             }
+            
+            const tableRows = table.querySelectorAll('tr');
+            let csv = 'Rank,Customer Name,Email,Total Orders,Total Spent (LKR),Loyalty Points,Top Category\n';
+            
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => `"${cell.textContent.trim().replace(/"/g, '""')}"`).join(',');
+                csv += rowData + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'PahanaEdu_Customers.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-    }
-    
-    function displayErrorMessage(message) {
-        const tableBody = document.getElementById('reportsTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${message}</td></tr>`;
-    }
 
-    // Live Filter Functionality (remains the same)
-    const liveFilterInput = document.getElementById('liveFilterInput');
-    liveFilterInput.addEventListener('input', function() {
-        const filter = this.value.toLowerCase();
-        const reportsTable = document.getElementById('reportsTable').getElementsByTagName('tbody')[0];
-        const rows = reportsTable.getElementsByTagName('tr');
+        // Set default dates and add event listeners
+        window.onload = () => {
+            const today = new Date();
+            const firstDayOfYear = new Date(today.getFullYear(), 0, 1).toISOString().slice(0, 10);
+            const todayISO = today.toISOString().slice(0, 10);
+            fromDateInput.value = firstDayOfYear;
+            toDateInput.value = todayISO;
+            // Run the report immediately on load with default dates
+            runReport();
+        };
 
-        Array.from(rows).forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
-        });
-    });
-
-    // Attach event listeners
-    document.getElementById('generateReportBtn').addEventListener('click', generateReport);
-    document.getElementById('exportCsvBtn').addEventListener('click', exportTableToCSV);
-    document.getElementById('reportType').addEventListener('change', updateInputFields);
-
-    // Initial report generation on page load
-    window.onload = function() {
-        updateInputFields(); // Set initial state of inputs
-        generateReport();
-    };
-
-</script>
-
+        // Event listeners to trigger report generation on input change
+        fromDateInput.addEventListener('change', runReport);
+        toDateInput.addEventListener('change', runReport);
+        limitInput.addEventListener('change', runReport);
+        
+        // Event listeners for download buttons
+        downloadPdfBtn.addEventListener('click', generateReportPdf);
+        downloadExcelBtn.addEventListener('click', generateReportExcel);
+    </script>
 </body>
 </html>
